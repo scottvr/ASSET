@@ -1,15 +1,13 @@
 import librosa
-import librosa.display
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
-import io
 import torch
 from diffusers import StableDiffusionImg2ImgPipeline
+import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore')
 
-class AudioSpectrogramProcessor:
+class EnhancedSpectrogramProcessor:
     def __init__(self, device="cuda" if torch.cuda.is_available() else "cpu"):
         self.device = device
         self.img2img = StableDiffusionImg2ImgPipeline.from_pretrained(
@@ -17,85 +15,110 @@ class AudioSpectrogramProcessor:
             torch_dtype=torch.float16 if device == "cuda" else torch.float32
         ).to(device)
         
-    def load_audio(self, file_path, sr=44100):
-        """Load audio file and return signal and sample rate."""
-        audio, sr = librosa.load(file_path, sr=sr)
-        return audio, sr
+    def normalize_channel(self, data, scale_factor=1.0):
+        """Normalize data to 0-255 range with optional scaling."""
+        data_min, data_max = data.min(), data.max()
+        normalized = ((data - data_min) / (data_max - data_min) * 255 * scale_factor).clip(0, 255).astype(np.uint8)
+        # Store normalization parameters for later reconstruction
+        return normalized, (data_min, data_max)
     
-    def create_spectrogram_with_phase(self, audio, sr, n_fft=2048, hop_length=512):
-        """Create spectrogram with phase information encoded in alpha channel."""
-        # Compute complex spectrogram
+    def denormalize_channel(self, normalized_data, params, scale_factor=1.0):
+        """Denormalize data back to original range."""
+        data_min, data_max = params
+        return (normalized_data.astype(float) / (255 * scale_factor)) * (data_max - data_min) + data_min
+
+    def create_complex_spectrogram(self, audio, sr, n_fft=2048, hop_length=512):
+        """Create spectrogram with complex component encoding."""
+        # Compute STFT
         stft = librosa.stft(audio, n_fft=n_fft, hop_length=hop_length)
         
-        # Get magnitude and phase
+        # Extract components
         magnitude = np.abs(stft)
         phase = np.angle(stft)
+        real = np.real(stft)
+        imag = np.imag(stft)
         
-        # Convert magnitude to dB scale
+        # Convert magnitude to dB scale for better dynamic range
         magnitude_db = librosa.amplitude_to_db(magnitude, ref=np.max)
         
-        # Normalize magnitude to 0-255 range
-        magnitude_normalized = ((magnitude_db - magnitude_db.min()) * 
-                              (255 / (magnitude_db.max() - magnitude_db.min()))).astype(np.uint8)
+        # Normalize each component
+        # Scale factors can be adjusted to emphasize different components
+        real_norm, real_params = self.normalize_channel(real, scale_factor=0.8)
+        imag_norm, imag_params = self.normalize_channel(imag, scale_factor=0.8)
+        mag_norm, mag_params = self.normalize_channel(magnitude_db, scale_factor=1.0)
+        phase_norm, phase_params = self.normalize_channel(phase, scale_factor=1.0)
         
-        # Normalize phase to 0-255 range (from -π to π)
-        phase_normalized = ((phase + np.pi) * (255 / (2 * np.pi))).astype(np.uint8)
+        # Store parameters for reconstruction
+        self.normalization_params = {
+            'real': real_params,
+            'imag': imag_params,
+            'magnitude': mag_params,
+            'phase': phase_params
+        }
         
         # Create RGBA image
-        height, width = magnitude_normalized.shape
+        height, width = magnitude.shape
         rgba_image = np.zeros((height, width, 4), dtype=np.uint8)
-        rgba_image[..., 0] = magnitude_normalized  # R channel - magnitude
-        rgba_image[..., 1] = magnitude_normalized  # G channel - magnitude
-        rgba_image[..., 2] = magnitude_normalized  # B channel - magnitude
-        rgba_image[..., 3] = phase_normalized      # A channel - phase
+        rgba_image[..., 0] = real_norm      # R channel - Real component
+        rgba_image[..., 1] = imag_norm      # G channel - Imaginary component
+        rgba_image[..., 2] = mag_norm       # B channel - Magnitude (dB)
+        rgba_image[..., 3] = phase_norm     # A channel - Phase
         
         return Image.fromarray(rgba_image, 'RGBA')
-    
+
     def process_image_with_diffusion(self, image, strength=0.3, guidance_scale=7.5):
-        """Process image using Stable Diffusion img2img while preserving alpha channel."""
-        # Extract alpha channel (phase information)
-        alpha = np.array(image.split()[-1])
+        """Process image while preserving complex information."""
+        # Extract and store all channels
+        r, g, b, a = image.split()
         
-        # Convert to RGB for processing
-        rgb_image = image.convert('RGB')
+        # Create a composite RGB image for processing
+        rgb_image = Image.merge('RGB', (r, g, b))
         
         # Process with minimal prompting
         processed_rgb = self.img2img(
             image=rgb_image,
-            prompt="high quality, detailed",
-            negative_prompt="blurry, distorted",
+            prompt="high quality, detailed audio spectrogram",
+            negative_prompt="blurry, distorted, artifacts",
             strength=strength,
             guidance_scale=guidance_scale,
             num_inference_steps=30
         ).images[0]
         
-        # Recombine with original alpha channel
-        processed_rgba = processed_rgb.convert('RGBA')
-        processed_rgba.putalpha(Image.fromarray(alpha))
+        # Extract processed RGB channels
+        pr, pg, pb = processed_rgb.split()
+        
+        # Recombine with original phase information
+        processed_rgba = Image.merge('RGBA', (pr, pg, pb, a))
         
         return processed_rgba
-    
+
     def spectrogram_to_audio(self, rgba_image, sr, n_fft=2048, hop_length=512):
-        """Convert RGBA spectrogram back to audio, using alpha channel for phase."""
+        """Convert processed RGBA spectrogram back to audio."""
         # Convert PIL Image to numpy array
         rgba_array = np.array(rgba_image)
         
-        # Extract magnitude from RGB (using R channel)
-        magnitude_normalized = rgba_array[..., 0]
+        # Extract components
+        real_norm = rgba_array[..., 0]
+        imag_norm = rgba_array[..., 1]
+        mag_norm = rgba_array[..., 2]
+        phase_norm = rgba_array[..., 3]
         
-        # Extract phase from alpha channel
-        phase_normalized = rgba_array[..., 3]
+        # Denormalize components
+        real = self.denormalize_channel(real_norm, self.normalization_params['real'], scale_factor=0.8)
+        imag = self.denormalize_channel(imag_norm, self.normalization_params['imag'], scale_factor=0.8)
+        magnitude_db = self.denormalize_channel(mag_norm, self.normalization_params['magnitude'])
+        phase = self.denormalize_channel(phase_norm, self.normalization_params['phase'])
         
-        # Denormalize magnitude
-        magnitude_db = (magnitude_normalized / 255.0 * 
-                       (self.magnitude_max - self.magnitude_min) + self.magnitude_min)
+        # Convert magnitude back from dB
         magnitude = librosa.db_to_amplitude(magnitude_db)
         
-        # Denormalize phase (-π to π)
-        phase = (phase_normalized / 255.0 * (2 * np.pi)) - np.pi
+        # Reconstruct complex spectrogram using both direct and polar representations
+        # This averaging approach can help reduce artifacts
+        stft_complex1 = real + 1j * imag  # Direct complex reconstruction
+        stft_complex2 = magnitude * np.exp(1j * phase)  # Polar reconstruction
         
-        # Reconstruct complex spectrogram
-        stft_reconstructed = magnitude * np.exp(1j * phase)
+        # Average the two reconstructions (can adjust weights if needed)
+        stft_reconstructed = 0.5 * (stft_complex1 + stft_complex2)
         
         # Inverse STFT
         audio_reconstructed = librosa.istft(stft_reconstructed, 
@@ -103,61 +126,51 @@ class AudioSpectrogramProcessor:
                                           n_fft=n_fft)
         
         return audio_reconstructed
-    
-    def process_audio_file(self, input_path, output_path, strength=0.3):
-        """Complete pipeline to process audio file with phase preservation."""
-        # Load audio
-        audio, sr = self.load_audio(input_path)
-        
-        # Create spectrogram with phase
-        spec_image = self.create_spectrogram_with_phase(audio, sr)
-        
-        # Store original magnitude range for reconstruction
-        self.magnitude_min = librosa.amplitude_to_db(np.abs(librosa.stft(audio))).min()
-        self.magnitude_max = librosa.amplitude_to_db(np.abs(librosa.stft(audio))).max()
-        
-        # Process with diffusion
-        processed_image = self.process_image_with_diffusion(spec_image, strength=strength)
-        
-        # Convert back to audio
-        processed_audio = self.spectrogram_to_audio(processed_image, sr)
-        
-        # Save processed audio
-        librosa.output.write_wav(output_path, processed_audio, sr)
-        
-        return processed_audio, sr
 
-    def visualize_spectrograms(self, original_image, processed_image):
-        """Visualize original and processed spectrograms side by side."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    def visualize_components(self, rgba_image):
+        """Visualize all components of the spectrogram separately."""
+        rgba_array = np.array(rgba_image)
         
-        # Display original
-        ax1.imshow(np.array(original_image)[:,:,:3])  # RGB channels only
-        ax1.set_title('Original Spectrogram')
-        ax1.axis('off')
+        fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+        axes = axes.ravel()
         
-        # Display processed
-        ax2.imshow(np.array(processed_image)[:,:,:3])  # RGB channels only
-        ax2.set_title('Processed Spectrogram')
-        ax2.axis('off')
+        titles = ['Real Component', 'Imaginary Component', 
+                 'Magnitude (dB)', 'Phase']
+        
+        for i, title in enumerate(titles):
+            im = axes[i].imshow(rgba_array[..., i], cmap='viridis')
+            axes[i].set_title(title)
+            axes[i].axis('off')
+            plt.colorbar(im, ax=axes[i])
         
         plt.tight_layout()
         return fig
 
 def main():
-    processor = AudioSpectrogramProcessor()
+    processor = EnhancedSpectrogramProcessor()
     
+    # Example usage
     input_file = "input.wav"
-    output_file = "output_processed.wav"
+    output_file = "output_enhanced.wav"
     
-    # Process with very conservative settings for initial testing
-    processed_audio, sr = processor.process_audio_file(
-        input_file,
-        output_file,
-        strength=0.15  # Very subtle processing
-    )
+    # Load audio
+    audio, sr = librosa.load(input_file, sr=None)
     
-    print(f"Processed audio saved to {output_file}")
+    # Create complex spectrogram
+    spec_image = processor.create_complex_spectrogram(audio, sr)
+    
+    # Process with very conservative settings
+    processed_image = processor.process_image_with_diffusion(spec_image, strength=0.15)
+    
+    # Convert back to audio
+    processed_audio = processor.spectrogram_to_audio(processed_image, sr)
+    
+    # Save result
+    librosa.output.write_wav(output_file, processed_audio, sr)
+    
+    # Visualize components
+    processor.visualize_components(spec_image)
+    plt.show()
 
 if __name__ == "__main__":
     main()
