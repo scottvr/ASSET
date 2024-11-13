@@ -1,8 +1,108 @@
+"""
+ChimeraCat arose as an ancillary utility for some larger work I was 
+doing with the help of Claude 3.5 Sonnet (New) in October 2024 
+
+This utility:
+
+Analyzes Python files for imports and definitions
+Builds a dependency graph
+Generates both a single .py file and a Colab notebook
+Handles internal vs external imports
+Avoids duplicate definitions
+Creates a clean, organized output
+Adds usage examples
+
+```python
+from ChimeraCat import ChimeraCat
+
+# Generate both notebook and Python file
+concat = ChimeraCat("src")
+notebook_file = concat.generate_colab_notebook()
+py_file = concat.generate_concat_file()
+```
+
+Features Claude is particularly proud of:
+- Dependency ordering using NetworkX
+- Duplicate prevention
+- Clean handling of internal vs external imports
+- Automatic notebook generation
+- Maintains code readability with section headers
+"""
+
 import re
 from pathlib import Path
 from typing import List, Set, Dict
 import networkx as nx
 from dataclasses import dataclass
+from datetime import datetime
+
+from enum import Enum
+from typing import Dict, List, Set, Optional, Pattern
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+
+class CompressionLevel(Enum):
+    SIGNATURES = "signatures"  # Just interfaces/types/docstrings
+    ESSENTIAL = "essential"    # + Core logic, skip standard patterns
+    VERBOSE = "verbose"        # Everything except obvious boilerplate
+    FULL = "full"             # Complete code
+
+@dataclass
+class CompressionPattern:
+    """Pattern for code compression with explanation"""
+    pattern: str
+    replacement: str
+    explanation: str
+    flags: re.RegexFlag = re.MULTILINE
+
+    def apply(self, content: str) -> str:
+        return re.sub(self.pattern, f"{self.replacement} # {self.explanation}\n", 
+                     content, flags=self.flags)
+
+@dataclass
+class CompressionRules:
+    """Collection of compression patterns for different levels"""
+    signatures: List[CompressionPattern] = field(default_factory=list)
+    essential: List[CompressionPattern] = field(default_factory=list)
+    verbose: List[CompressionPattern] = field(default_factory=list)
+
+    @classmethod
+    def default_rules(cls) -> 'CompressionRules':
+        return cls(
+            signatures=[
+                CompressionPattern(
+                    pattern=r'(class|def)\s+\w+[^:]*:\s*(?:"""(?:.*?)""")?.*?(?=(?:class|def|\Z))',
+                    replacement=r'\1\n    ...',
+                    explanation="Implementation details elided",
+                    flags=re.MULTILINE | re.DOTALL
+                )
+            ],
+            essential=[
+                CompressionPattern(
+                    pattern=r'def get_\w+\(.*?\):\s*return [^;{}]+?\n',
+                    replacement='    ...',
+                    explanation="Simple getter method"
+                ),
+                CompressionPattern(
+                    pattern=r'def __init__\(self(?:,\s*[^)]+)?\):\s*(?:[^{};]+?\n\s+)+?(?=\n\s*\w|$)',
+                    replacement='    ...',
+                    explanation="Standard initialization"
+                )
+            ],
+            verbose=[
+                CompressionPattern(
+                    pattern=r'if __name__ == "__main__":\s*(?:[^{};]+?\n\s*)+?(?=\n\s*\w|$)',
+                    replacement='    ...',
+                    explanation="Main execution block"
+                ),
+                CompressionPattern(
+                    pattern=r'def __str__\(self\):\s*return [^;{}]+?\n',
+                    replacement='    ...',
+                    explanation="String representation"
+                )
+            ]
+        )
 
 @dataclass
 class ModuleInfo:
@@ -15,9 +115,14 @@ class ModuleInfo:
 
 class ChimeraCat:
     """Utility to concatenate modular code into Colab-friendly single files"""
-    
-    def __init__(self, src_dir: str = "src"):
+class ChimeraCat:
+    def __init__(self, 
+                 src_dir: str = "src", 
+                 compression_level: CompressionLevel = CompressionLevel.FULL,
+                 rules: Optional[CompressionRules] = None):
         self.src_dir = Path(src_dir)
+        self.compression_level = compression_level
+        self.rules = rules or CompressionRules.default_rules()
         self.modules: Dict[Path, ModuleInfo] = {}
         self.dep_graph = nx.DiGraph()
         
@@ -50,6 +155,28 @@ class ChimeraCat:
             classes=classes,
             functions=functions
         )
+
+    def _get_external_imports(self) -> List[str]:
+      """Get sorted list of external imports from all modules"""
+      external_imports = set()
+      for module in self.modules.values():
+          external_imports.update(
+              imp for imp in module.imports 
+              if not any(str(imp).startswith(str(p.relative_to(self.src_dir).parent)) 
+                        for p in self.modules)
+              and not imp.startswith('.')
+          )
+      
+      # Format and sort the import statements
+      return sorted(f"import {imp}" for imp in external_imports)
+
+    def _get_sorted_files(self) -> List[Path]:
+        """Get files sorted by dependencies"""
+        try:
+            return list(nx.topological_sort(self.dep_graph))
+        except nx.NetworkXUnfeasible:
+            print("Warning: Circular dependencies detected. Using simple ordering.")
+            return list(self.modules.keys()) 
     
     def build_dependency_graph(self):
         """Build a dependency graph of all Python files"""
@@ -71,78 +198,87 @@ class ChimeraCat:
                     if str(other_pkg) == '.'.join(imp_parts[:-1]):
                         self.dep_graph.add_edge(file_path, other_path)
     
-    def generate_colab_file(self, output_file: str = "colab_combined.py") -> str:
+    def _compress_content(self, content: str) -> str:
+        """Apply compression based on current level"""
+        if self.compression_level == CompressionLevel.FULL:
+            return content
+
+        compressed = content
+        patterns = []
+        
+        # Apply patterns based on level
+        if self.compression_level == CompressionLevel.SIGNATURES:
+            patterns = self.rules.signatures
+        elif self.compression_level == CompressionLevel.ESSENTIAL:
+            patterns = self.rules.signatures + self.rules.essential
+        elif self.compression_level == CompressionLevel.VERBOSE:
+            patterns = self.rules.verbose
+
+        # Apply each pattern
+        for pattern in patterns:
+            compressed = pattern.apply(compressed)
+
+        return compressed
+
+
+    def generate_concat_file(self, output_file: str = "colab_combined.py") -> str:
         """Generate a single file combining all modules in dependency order"""
         self.build_dependency_graph()
         
-        # Sort files by dependencies
-        try:
-            sorted_files = list(nx.topological_sort(self.dep_graph))
-        except nx.NetworkXUnfeasible:
-            print("Warning: Circular dependencies detected. Using simple ordering.")
-            sorted_files = list(self.modules.keys())
-        
-        # External imports section
-        external_imports = set()
-        for module in self.modules.values():
-            external_imports.update(imp for imp in module.imports 
-                                 if not any(str(imp).startswith(str(p.relative_to(self.src_dir).parent)) 
-                                          for p in self.modules))
-        
-        # Generate combined file
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
+
+        header = f"""# Generated by ChimeraCat
+#  /\\___/\\  ChimeraCat
+# ( o   o )  Modular Python Fusion
+# (  =^=  ) 
+#  (______)  Generated: {timestamp}
+#
+# Compression Level: {self.compression_level.value}
+"""
+
+        # Generate combined file with compression
         output = [
-            "# Generated by ChimeraCat",
+            header,
             "# External imports",
-            *sorted(f"import {imp}" for imp in external_imports if not imp.startswith('.')),
+            *self._get_external_imports(),
             "\n# Combined module code\n"
         ]
         
-        added_content = set()
-        for file_path in sorted_files:
+        for file_path in self._get_sorted_files():
             module = self.modules[file_path]
-            
-            # Add module header
             rel_path = file_path.relative_to(self.src_dir)
-            output.append(f"\n# From {rel_path}")
             
-            # Clean up imports and add content
-            lines = []
-            for line in module.content.split('\n'):
-                # Skip internal imports and empty lines at start
-                if not (line.startswith('from .') or line.startswith('import .') or 
-                       (not lines and not line.strip())):
-                    if not any(pattern in line for pattern in added_content):
-                        lines.append(line)
-            
-            # Add non-duplicate content
-            content = '\n'.join(lines)
-            output.append(content)
-            
-            # Track added definitions to avoid duplicates
-            added_content.update(module.classes)
-            added_content.update(module.functions)
+            output.extend([
+                f"\n# From {rel_path}",
+                self._compress_content(module.content)
+            ])
         
-        # Write output
         with open(output_file, 'w') as f:
             f.write('\n'.join(output))
             
         return output_file
-    
+        
     def generate_colab_notebook(self, output_file: str = "colab_combined.ipynb"):
         """Generate a Jupyter notebook with the combined code"""
-        py_file = self.generate_colab_file("temp_combined.py")
+        py_file = self.generate_concat_file("temp_combined.py")
         
         with open(py_file, 'r') as f:
             code = f.read()
         
-        # Create notebook structure
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
         notebook = {
             "cells": [
                 {
                     "cell_type": "markdown",
                     "metadata": {},
-                    "source": ["# Generated Colab Notebook\n", 
-                             "This notebook was automatically generated by ChimeraCat."]
+                    "source": [
+                        "```\n",
+                        " /\\___/\\  ChimeraCat\n",
+                        "( o   o )  Modular Python Fusion\n",
+                        "(  =^=  )\n",
+                        " (_____)  Generated: {timestamp}\n",
+                        "```\n"
+                    ],
                 },
                 {
                     "cell_type": "code",
@@ -161,13 +297,12 @@ class ChimeraCat:
                     "metadata": {},
                     "source": [
                         "# Example usage",
-                        "with VocalSeparator(output_dir='test_output') as separator:",
-                        "    result = separator.separate_and_analyze(",
-                        "        vocal_paths=('track-09.wav', 'track-10.wav'),",
-                        "        accompaniment_paths=('track-07.wav', 'track-08.wav'),",
-                        "        start_time=90.0,",
-                        "        duration=30.0",
-                        "    )"
+                        "cat = ChimeraCat('srcdir')",
+                        "notebook_file = cat.generate_colab_notebook()",
+                        "print(f\"Generated notebook: {notebook_file}\")",
+                        "cat = ChimeraCat('srcdir', compression_level = CompressionLevel.ESSENTIAL: ",
+                        "output_file = cat.generate_concat_file(\"essential_code.py\")",
+                 
                     ],
                     "execution_count": None,
                     "outputs": []
@@ -192,11 +327,22 @@ class ChimeraCat:
         return output_file
 
 def main():
-    concat = ChimeraCat("src")
-    notebook_file = concat.generate_colab_notebook()
-    print(f"Generated notebook: {notebook_file}")
-    py_file = concat.generate_colab_file()
-    print(f"Generated Python file: {py_file}")
+    # Example with different compression levels
+    examples = {
+        CompressionLevel.SIGNATURES: "signatures_only.py",
+        CompressionLevel.ESSENTIAL: "essential_code.py",
+        CompressionLevel.VERBOSE: "verbose_code.py",
+        CompressionLevel.FULL: "full_code.py"
+    }
+    
+    for level, filename in examples.items():
+        cat = ChimeraCat("src", compression_level=level)
+        output_file = cat.generate_concat_file(filename)
+        print(f"Generated {level.value} version: {output_file}")
+    
+    cat = ChimeraCat("src")
+    output_file = cat.generate_colab_notebook("colab_combined.ipynb")
+    print(f"Generated notebook:{output_file}")
 
 if __name__ == "__main__":
     main()
