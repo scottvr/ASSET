@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 *.sw?
+=======
+>>>>>>> 395bf5a1f856c75ea62ba371a6837ca8b7149f07
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
