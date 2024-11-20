@@ -22,17 +22,13 @@ dependencies = [
     "spleeter",
 ]
 
-[
-project.optional-dependencies
-]
+[project.optional-dependencies]
 dev = [
     "pytest",
     "black",
     "isort",
 ]
 
-[
-tool.setuptools
-]
+[tool.setuptools]
 package-dir = {"" = "src"}
 packages = ["stemmproved"]
