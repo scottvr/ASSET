@@ -1,6 +1,6 @@
 # ASSET - Audio Separation Stemfile Enhancement Toolkit
 
-## Stemprover 
+## [Stemprover ControlNet] 
 a PoC for misusing image diffusion techniques for audio DSP, taking advantage of the huge investments in compute and dollars that have been made 
 training models such as Stable Diffusion. We adapt the ControlNet architecture to the task of removing audio artifacts commonly introduced 
 during the stem separation process by tools such as Spleeter and Demucs.  We accomplish this by converting audio in the amplitude 
