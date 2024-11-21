@@ -1,3 +1,6 @@
+from ...common.types import AudioArray, SpectrogramArray, TensorType
+from ...common.audio_utils import create_spectrogram
+
 from abc import ABC, abstractmethod
 import numpy as np
 import torch
