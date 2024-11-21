@@ -181,66 +181,52 @@ class ChimeraCat:
         """Process and adjust imports for concatenated context"""
         lines = []
         for line in content.splitlines():
-            if line.strip().startswith('from .'):
-                # Comment out relative import and add note
-                lines.append(f"# {line}  # Original relative import")
-            elif line.strip().startswith('from ..'):
-                # Comment out parent relative import and add note
-                lines.append(f"# {line}  # Original relative import")
+            if line.strip().startswith('from .') or line.strip().startswith('from ..'):
+                # Convert relative import to docstring and preserve indentation
+                indent = len(line) - len(line.lstrip())
+                spaces = ' ' * indent
+                lines.append(f'{spaces}"""{line.strip()}  # Original relative import"""')
             else:
                 lines.append(line)
         return '\n'.join(lines)
-
+    
     def build_dependency_graph(self):
-        """Build a dependency graph with proper relative import resolution"""
-        self._debug_print("\nBuilding dependency graph...")
-        
-        # First pass: Create nodes
+        """Build a dependency graph of all Python files"""
+        # First pass: Collect all modules and create nodes
         for file_path in self.src_dir.rglob("*.py"):
             module_info = self.analyze_file(file_path)
             if module_info is not None:
                 self.modules[file_path] = module_info
+                # Each file is a node in our graph
                 self.dep_graph.add_node(file_path)
-                self._debug_print(f"Added node: {file_path.relative_to(self.src_dir)}")
-                if module_info.imports:
-                    self._debug_print(f"  Found imports: {', '.join(module_info.imports)}")
         
-        # Second pass: Add edges
+        # Second pass: Add edges based on imports
         for file_path, module in self.modules.items():
-            rel_path = file_path.relative_to(self.src_dir)
-            
+            pkg_path = file_path.relative_to(self.src_dir).parent
             for imp in module.imports:
-                self._debug_print(f"  Processing import '{imp}' in {file_path.name}")
+                # Convert import to potential file paths
+                imp_parts = imp.split('.')
                 
-                # Handle relative imports
-                if imp.startswith('.'):
-                    dots = imp.count('.')
-                    current_parts = list(rel_path.parent.parts)
-                    # Go up directory tree based on dot count
-                    target_parts = current_parts[:-dots] if dots > 0 else current_parts
-                    # Add remaining import path
-                    remaining_path = imp.lstrip('.').split('.')
-                    if remaining_path[0]:  # If there's more to the path after the dots
-                        target_parts.extend(remaining_path)
-                    
-                    # Find matching module
-                    for other_path in self.modules:
-                        other_rel = other_path.relative_to(self.src_dir)
-                        if str(other_rel.parent.joinpath(other_rel.stem)) == str(Path(*target_parts)):
-                            self.dep_graph.add_edge(other_path, file_path)  # Note reversed order
-                            self._debug_print(f"    Added dependency: {other_path.name} -> {file_path.name}")
-                
-                # Handle absolute imports
-                else:
-                    imp_parts = imp.split('.')
-                    for other_path in self.modules:
-                        other_rel = other_path.relative_to(self.src_dir)
-                        if str(other_rel.stem) == imp_parts[-1]:  # Match module name
-                            if len(imp_parts) == 1 or str(other_rel.parent).replace('\\', '/').endswith('/'.join(imp_parts[:-1])):
-                                self.dep_graph.add_edge(other_path, file_path)  # Note reversed order
-                                self._debug_print(f"    Added dependency: {other_path.name} -> {file_path.name}")
-    
-    
+                # Handle different import types
+                if imp.startswith('.'):  # Relative import
+                    # Calculate actual path from relative import
+                    relative_depth = imp.count('.')
+                    target_path = pkg_path
+                    for _ in range(relative_depth - 1):
+                        target_path = target_path.parent
+                    remaining_parts = imp_parts[relative_depth:]
+                else:  # Absolute import
+                    remaining_parts = imp_parts
+
+                # Find matching module for this import
+                for other_path in self.modules:
+                    other_pkg = other_path.relative_to(self.src_dir).parent
+                    if self._paths_match(other_pkg, remaining_parts):
+                        # Add directed edge: file_path depends on other_path
+                        self.dep_graph.add_edge(file_path, other_path)
+
+                        print(f"    Added dependency: {file_path.name} -> {other_path.name}")
+
         
     def generate_concat_file(self, output_file: str = "colab_combined.py") -> str:
         """Generate a single file combining all modules in dependency order"""
@@ -317,107 +303,134 @@ class ChimeraCat:
       return sorted(f"import {imp}" for imp in external_imports)
 
     def _paths_match(self, path: Path, import_parts: List[str]) -> bool:
-        """Enhanced import path matching"""
-        # Convert path to module notation
-        module_path = str(path).replace('/', '.').replace('\\', '.')
-        
-        # Handle special cases
-        if not import_parts:
-            return False
-            
-        import_str = '.'.join(import_parts)
-        
-        # Direct match
-        if module_path.endswith(import_str):
-            return True
-            
-        # Check if it's a submodule import
-        if import_str.startswith(module_path):
-            return True
-            
-        # Check for parent module imports
-        if module_path.startswith(import_str):
-            return True
-            
-        return False
-    
+        """Check if a path matches an import statement"""
+        path_parts = list(path.parts)
+        return len(path_parts) == len(import_parts) and \
+               all(p == i for p, i in zip(path_parts, import_parts))
+
     def _get_sorted_files(self) -> List[Path]:
-        """Get files sorted by dependencies with optional logging"""
+        """Get files sorted by dependencies"""
         try:
+            # Topological sort ensures dependencies come before dependents
             sorted_files = list(nx.topological_sort(self.dep_graph))
             
-            if self.debug:
-                self._debug_print("\nResolved module order:")
-                for idx, file in enumerate(sorted_files):
-                    deps = list(self.dep_graph.predecessors(file))
-                    rel_path = file.relative_to(self.src_dir)
-                    self._debug_print(f"{idx+1}. {rel_path}")
-                    if deps:
-                        dep_paths = [d.relative_to(self.src_dir) for d in deps]
-                        self._debug_print(f"   Depends on: {', '.join(map(str, dep_paths))}")
+            # Debug info
+            print("\nDependency Resolution:")
+            for idx, file in enumerate(sorted_files):
+                deps = list(self.dep_graph.predecessors(file))
+                print(f"{idx+1}. {file.name}")
+                if deps:
+                    print(f"   Depends on: {', '.join(d.name for d in deps)}")
             
             return sorted_files
+
+        except nx.NetworkXUnfeasible as e:
+            # If we detect a cycle, identify and report it
+            cycles = list(nx.simple_cycles(self.dep_graph))
+            print("Warning: Circular dependencies detected:")
+            for cycle in cycles:
+                cycle_path = ' -> '.join(p.name for p in cycle)
+                print(f"  {cycle_path}")
             
-        except nx.NetworkXUnfeasible:
-            self._debug_print("\nWarning: Circular dependencies detected!")
-            # Always print circular dependency warnings regardless of debug mode
-            print("Warning: Circular dependencies found in modules. Check dependency report for details.")
-            if self.debug:
-                for cycle in nx.simple_cycles(self.dep_graph):
-                    cycle_paths = [p.relative_to(self.src_dir) for p in cycle]
-                    self._debug_print(f"  {' -> '.join(map(str, cycle_paths))}")
-            
+            # Fall back to simple ordering but warn user
+            print("Using simple ordering instead.")
             return list(self.modules.keys())
-    
+
     def visualize_dependencies(self, output_file: str = "dependencies.png"):
-        """Visualize the dependency graph with detailed node information"""
+        """Optional: Visualize the dependency graph"""
         try:
             import matplotlib.pyplot as plt
-            
-            # Create figure
+            pos = nx.spring_layout(self.dep_graph)
             plt.figure(figsize=(12, 8))
-            
-            # Generate layout
-            pos = nx.spring_layout(self.dep_graph, k=2, iterations=50)
-            
-            # Draw nodes
-            nx.draw_networkx_nodes(self.dep_graph, pos,
-                                 node_color='lightblue',
-                                 node_size=2000)
-            
-            # Draw edges with arrows
-            nx.draw_networkx_edges(self.dep_graph, pos,
-                                 edge_color='gray',
-                                 arrows=True,
-                                 arrowsize=20)
-            
-            # Add labels with relative paths
-            labels = {p: str(p.relative_to(self.src_dir)) for p in self.dep_graph.nodes()}
-            nx.draw_networkx_labels(self.dep_graph, pos, labels,
-                                  font_size=8,
-                                  font_weight='bold')
-            
-            # Add title and information
-            plt.title("Module Dependencies\n", pad=20)
-            
-            # Add dependency statistics
-            plt.figtext(0.02, 0.02, 
-                       f"Total Modules: {len(self.modules)}\n"
-                       f"Dependencies: {self.dep_graph.number_of_edges()}\n"
-                       f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                       fontsize=8)
-            
-            # Save with high DPI for clarity
-            plt.savefig(output_file, dpi=300, bbox_inches='tight')
+            nx.draw(self.dep_graph, pos, with_labels=True, 
+                   labels={p: p.name for p in self.dep_graph.nodes()},
+                   node_color='lightblue',
+                   node_size=2000,
+                   font_size=8)
+            plt.savefig(output_file)
             plt.close()
-            
-            self._debug_print(f"\nDependency graph visualization saved to: {output_file}")
             return output_file
-            
         except ImportError:
             print("matplotlib not available for visualization")
             return None
 
+#     def _get_sorted_files(self) -> List[Path]:
+#         """Get files sorted by dependencies with optional logging"""
+#         try:
+#             sorted_files = list(nx.topological_sort(self.dep_graph))
+#             
+#             if self.debug:
+#                 self._debug_print("\nResolved module order:")
+#                 for idx, file in enumerate(sorted_files):
+#                     deps = list(self.dep_graph.predecessors(file))
+#                     rel_path = file.relative_to(self.src_dir)
+#                     self._debug_print(f"{idx+1}. {rel_path}")
+#                     if deps:
+#                         dep_paths = [d.relative_to(self.src_dir) for d in deps]
+#                         self._debug_print(f"   Depends on: {', '.join(map(str, dep_paths))}")
+#             
+#             return sorted_files
+#             
+#         except nx.NetworkXUnfeasible:
+#             self._debug_print("\nWarning: Circular dependencies detected!")
+#             # Always print circular dependency warnings regardless of debug mode
+#             print("Warning: Circular dependencies found in modules. Check dependency report for details.")
+#             if self.debug:
+#                 for cycle in nx.simple_cycles(self.dep_graph):
+#                     cycle_paths = [p.relative_to(self.src_dir) for p in cycle]
+#                     self._debug_print(f"  {' -> '.join(map(str, cycle_paths))}")
+#             
+#             return list(self.modules.keys())
+#     
+#     def visualize_dependencies(self, output_file: str = "dependencies.png"):
+#         """Visualize the dependency graph with detailed node information"""
+#         try:
+#             import matplotlib.pyplot as plt
+#             
+#             # Create figure
+#             plt.figure(figsize=(12, 8))
+#             
+#             # Generate layout
+#             pos = nx.spring_layout(self.dep_graph, k=2, iterations=50)
+#             
+#             # Draw nodes
+#             nx.draw_networkx_nodes(self.dep_graph, pos,
+#                                  node_color='lightblue',
+#                                  node_size=2000)
+#             
+#             # Draw edges with arrows
+#             nx.draw_networkx_edges(self.dep_graph, pos,
+#                                  edge_color='gray',
+#                                  arrows=True,
+#                                  arrowsize=20)
+#             
+#             # Add labels with relative paths
+#             labels = {p: str(p.relative_to(self.src_dir)) for p in self.dep_graph.nodes()}
+#             nx.draw_networkx_labels(self.dep_graph, pos, labels,
+#                                   font_size=8,
+#                                   font_weight='bold')
+#             
+#             # Add title and information
+#             plt.title("Module Dependencies\n", pad=20)
+#             
+#             # Add dependency statistics
+#             plt.figtext(0.02, 0.02, 
+#                        f"Total Modules: {len(self.modules)}\n"
+#                        f"Dependencies: {self.dep_graph.number_of_edges()}\n"
+#                        f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+#                        fontsize=8)
+#             
+#             # Save with high DPI for clarity
+#             plt.savefig(output_file, dpi=300, bbox_inches='tight')
+#             plt.close()
+#             
+#             self._debug_print(f"\nDependency graph visualization saved to: {output_file}")
+#             return output_file
+#             
+#         except ImportError:
+#             print("matplotlib not available for visualization")
+#             return None
+# 
     def get_dependency_report(self) -> str:
         """Generate a detailed dependency report"""
         report = ["Dependency Analysis Report", "=" * 25, ""]
@@ -464,7 +477,7 @@ class ChimeraCat:
     
     def _compress_content(self, content: str) -> str:
         """Apply compression based on current level"""
-        if self.compression_level == CompressionLevel.FULL:
+        if self.compression_level == CompressionLevel['FULL']:
             return content
 
         compressed = content
@@ -552,23 +565,21 @@ def main():
     }
     
     for level, filename in examples.items():
-        cat = ChimeraCat("src", compression_level=level)
+        cat = ChimeraCat("src", compression_level=level, debug=debug)
         output_file = cat.generate_concat_file(filename)
         print(f"Generated {level.value} version: {output_file}")
     
-    cat = ChimeraCat("src", debug=debug)
+    cat = ChimeraCat("src", CompressionLevel.FULL, debug=debug)
+    output_file = cat.generate_colab_notebook()
+    print(f"Generated colab notebook  version: {output_file}")
 
-    cat.visualize_dependencies("module_deps.png")
     if debug:
-        # Generate visualization
         cat.visualize_dependencies("module_deps.png")
-
         # Get detailed report
         report = cat.get_dependency_report()
         print(report)
+        # Generate visualization
 
-    output_file = cat.generate_colab_notebook("colab_combined.ipynb")
-    print(f"Generated notebook:{output_file}")
 
 if __name__ == "__main__":
     main()
