@@ -67,38 +67,56 @@ class CompressionRules:
     essential: List[CompressionPattern] = field(default_factory=list)
     verbose: List[CompressionPattern] = field(default_factory=list)
 
+@dataclass
+class CompressionRules:
+    """Collection of compression patterns for different levels"""
+    signatures: List[CompressionPattern] = field(default_factory=list)
+    essential: List[CompressionPattern] = field(default_factory=list)
+    verbose: List[CompressionPattern] = field(default_factory=list)
+
     @classmethod
     def default_rules(cls) -> 'CompressionRules':
         return cls(
             signatures=[
                 CompressionPattern(
-                    pattern=r'(class|def)\s+\w+[^:]*:\s*(?:"""(?:.*?)""")?.*?(?=(?:class|def|\Z))',
-                    replacement=r'\1\n    ...',
-                    explanation="Implementation details elided",
+                    # Preserve class name and inheritance
+                    pattern=r'(class\s+\w+(?:\s*\([^)]*\))?):(?:\s*"""(?:.*?)""")?.*?(?=(?:class|def|\Z))',
+                    replacement=r'\1:\n    ... # Class implementation elided',
+                    explanation="Class implementation details elided",
+                    flags=re.MULTILINE | re.DOTALL
+                ),
+                CompressionPattern(
+                    # Preserve function signature
+                    pattern=r'(def\s+\w+\s*\([^)]*\)):(?:\s*"""(?:.*?)""")?.*?(?=(?:class|def|\Z))',
+                    replacement=r'\1:\n    ... # Function implementation elided',
+                    explanation="Function implementation details elided",
                     flags=re.MULTILINE | re.DOTALL
                 )
             ],
             essential=[
                 CompressionPattern(
-                    pattern=r'def get_\w+\(.*?\):\s*return [^;{}]+?\n',
-                    replacement='    ...',
+                    # Preserve getter method names
+                    pattern=r'(def\s+get_\w+\([^)]*\)):\s*return [^;{}]+?\n',
+                    replacement=r'\1:\n    ... # Simple getter elided',
                     explanation="Simple getter method"
                 ),
                 CompressionPattern(
-                    pattern=r'def __init__\(self(?:,\s*[^)]+)?\):\s*(?:[^{};]+?\n\s+)+?(?=\n\s*\w|$)',
-                    replacement='    ...',
+                    # Preserve init signature
+                    pattern=r'(def\s*__init__\s*\([^)]*\)):\s*(?:[^{};]+?\n\s+)+?(?=\n\s*\w|$)',
+                    replacement=r'\1:\n    ... # Standard initialization elided',
                     explanation="Standard initialization"
                 )
             ],
             verbose=[
                 CompressionPattern(
-                    pattern=r'if __name__ == "__main__":\s*(?:[^{};]+?\n\s*)+?(?=\n\s*\w|$)',
-                    replacement='    ...',
+                    pattern=r'if\s+__name__\s*==\s*"__main__":\s*(?:[^{};]+?\n\s*)+?(?=\n\s*\w|$)',
+                    replacement='if __name__ == "__main__":\n    ... # Main execution block elided',
                     explanation="Main execution block"
                 ),
                 CompressionPattern(
-                    pattern=r'def __str__\(self\):\s*return [^;{}]+?\n',
-                    replacement='    ...',
+                    # Preserve str method signature
+                    pattern=r'(def\s+__str__\s*\([^)]*\)):\s*return [^;{}]+?\n',
+                    replacement=r'\1:\n    ... # String representation elided',
                     explanation="String representation"
                 )
             ]
@@ -176,19 +194,17 @@ class ChimeraCat:
             classes=classes,
             functions=functions
         )
-    
+
     def _process_imports(self, content: str, module_path: Path) -> str:
         """Process and adjust imports for concatenated context"""
-        lines = []
-        for line in content.splitlines():
-            if line.strip().startswith('from .') or line.strip().startswith('from ..'):
-                # Convert relative import to docstring and preserve indentation
-                indent = len(line) - len(line.lstrip())
-                spaces = ' ' * indent
-                lines.append(f'{spaces}"""{line.strip()}  # Original relative import"""')
-            else:
-                lines.append(line)
-        return '\n'.join(lines)
+        def replace_relative_import(match: re.Match) -> str:
+            indent = len(match.group()) - len(match.group().lstrip())
+            spaces = ' ' * indent
+            original_line = match.group()
+            return f'{spaces}"""RELATIVE_IMPORT: \n{original_line}\n{spaces}"""'
+        
+        pattern = r'^\s*from\s+\..*$'
+        return re.sub(pattern, replace_relative_import, content, flags=re.MULTILINE)
     
     def build_dependency_graph(self):
         """Build a dependency graph of all Python files"""
@@ -227,26 +243,20 @@ class ChimeraCat:
 
                         print(f"    Added dependency: {file_path.name} -> {other_path.name}")
 
-        
     def generate_concat_file(self, output_file: str = "colab_combined.py") -> str:
         """Generate a single file combining all modules in dependency order"""
         self.build_dependency_graph()
         
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
-    
-        header = f"""# Generated by ChimeraCat
-    #  /\\___/\\  ChimeraCat
-    # ( o   o )  Modular Python Fusion
-    # (  =^=  ) 
-    #  (______)  Generated: {timestamp}
-    #
-    # Compression Level: {self.compression_level.value}
-    """
+        header = f"""{self._get_header_content()}
+        # Compression Level: {self.compression_level.value}
+        """
         
         # Start with external imports
         output = [
             header,
-            "# External imports",
+            '"""',
+            self.generate_dependency_ascii(),
+            "# External imports",'"""',
             *self._get_external_imports(),
             "\n# Combined module code\n"
         ]
@@ -420,7 +430,15 @@ class ChimeraCat:
 
         return compressed
 
-
+    def _get_header_content(self):
+        return  f"""
+##Notebook Generated by ChimeraCat\n
+# Generated by ChimeraCat
+#  /\\___/\\  ChimeraCat
+# ( o   o )  Modular Python Fusion
+# (  =^=  )
+#  (______)  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
+        
     def generate_colab_notebook(self, output_file: str = "colab_combined.ipynb"):
         """Generate a Jupyter notebook with the combined code"""
         py_file = self.generate_concat_file("temp_combined.py")
@@ -450,10 +468,7 @@ class ChimeraCat:
                     "metadata": {},
                     "source": [
                         "```\n",
-                        " /\\___/\\   ChimeraCat\n",
-                        "( o   o )  Modular Python Fusion\n",
-                        "(  =^=  )  https://github.com/scottvr/chimeracat\n",
-                        f" (______)  Generated: {timestamp}\n",
+                        f"{self._get_header_content()}".splitlines(keepends=True),
                         "```\n"
                     ]
                 }
@@ -476,7 +491,86 @@ class ChimeraCat:
         
         Path("temp_combined.py").unlink()  # Clean up temporary file
         return output_file
-
+    
+    def generate_dependency_ascii(self) -> str:
+        """Generate ASCII representation of dependency graph"""
+        from networkx.drawing import nx_pydot
+        import pydot
+        
+        # Convert to DOT format
+        dot_data = nx_pydot.to_pydot(self.dep_graph)
+        
+        # For cleaner output, use relative paths
+        for node in dot_data.get_nodes():
+            if node.get_name():
+                path = Path(node.get_name().strip('"'))
+                try:
+                    rel_path = path.relative_to(self.src_dir)
+                    node.set_name(f'"{rel_path}"')
+                except ValueError:
+                    pass
+        
+        ascii_art = f"""
+Directory Structure:
+{self._get_tree_output()}
+    
+Module Dependencies:
+{self._dot_to_ascii(dot_data.to_string())}
+    
+Import Summary:
+{self._generate_import_summary()}
+    """
+        return ascii_art
+    
+    def _get_tree_output(self) -> str:
+        """Get tree command output"""
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['tree', str(self.src_dir)],
+                capture_output=True,
+                text=True
+            )
+            return result.stdout
+        except FileNotFoundError:
+            # Fallback to simple directory listing if tree not available
+            return '\n'.join(str(p.relative_to(self.src_dir)) 
+                            for p in self.src_dir.rglob('*.py'))
+    
+    def _dot_to_ascii(self, dot_string: str) -> str:
+        """Convert DOT format to ASCII art"""
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['graph-easy'],
+                input=dot_string,
+                capture_output=True,
+                text=True
+            )
+            return result.stdout
+        except FileNotFoundError:
+            return "graph-easy not found. Install with: cpan Graph::Easy"
+    
+    def _generate_import_summary(self) -> str:
+        """Generate summary of imports"""
+        external_imports = set()
+        internal_deps = set()
+        
+        for module in self.modules.values():
+            for imp in module.imports:
+                if not imp.startswith('.'):
+                    external_imports.add(imp)
+                else:
+                    internal_deps.add(imp)
+        
+        return f"""
+    External Dependencies:
+    {', '.join(sorted(external_imports))}
+    
+    Internal Dependencies:
+    {', '.join(sorted(internal_deps))}
+    """
+    
 def main():
     debug = True
     # Example with different compression levels
@@ -488,7 +582,7 @@ def main():
     }
     
     for level, filename in examples.items():
-        cat = ChimeraCat("src", compression_level=level, debug=debug)
+        cat = ChimeraCat("..\\src", compression_level=level, debug=debug)
         output_file = cat.generate_concat_file(filename)
         print(f"Generated {level.value} version: {output_file}")
     
