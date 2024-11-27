@@ -46,3 +46,19 @@ class SeparationResult:
     analysis_path: Optional[Path] = None
     phase_analysis: Optional[Dict[str, Any]] = None
     artifact_analysis: Optional[Dict[str, str]] = None
+
+@dataclass
+class SegmentConfig:
+    """Configuration for segment generation"""
+    segment_length: float = 5.0
+    overlap: float = 2.5
+    min_vocal_energy: float = 0.1  # Threshold for keeping vocal segments
+    sample_rate: int = 44100
+    
+    @property
+    def segment_samples(self) -> int:
+        return int(self.segment_length * self.sample_rate)
+    
+    @property
+    def hop_samples(self) -> int:
+        return int((self.segment_length - self.overlap) * self.sample_rate)
