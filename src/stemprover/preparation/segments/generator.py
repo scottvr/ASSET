@@ -18,22 +18,6 @@ Key features:
 5. Preserves timing information for potential time-based analysis
 """
 
-@dataclass
-class SegmentConfig:
-    """Configuration for segment generation"""
-    segment_length: float = 5.0
-    overlap: float = 2.5
-    min_vocal_energy: float = 0.1  # Threshold for keeping vocal segments
-    sample_rate: int = 44100
-    
-    @property
-    def segment_samples(self) -> int:
-        return int(self.segment_length * self.sample_rate)
-    
-    @property
-    def hop_samples(self) -> int:
-        return int((self.segment_length - self.overlap) * self.sample_rate)
-
 class TrainingSegmentGenerator:
     """Generates training segments from multitrack sources"""
     
@@ -127,31 +111,6 @@ class TrainingSegmentGenerator:
             combinations['rhythm_section'] = segments[1] + segments[2]  # bass + drums
             
         return combinations
-
-class TrainingDataset(Dataset):
-    """Dataset for training with segmented audio"""
-    
-    def __init__(self,
-                 song_paths: List[Dict[str, Path]],
-                 segment_config: SegmentConfig,
-                 processing_config: ProcessingConfig):
-        self.generator = TrainingSegmentGenerator(segment_config, processing_config)
-        self.segments = []
-        
-        # Pre-generate all segments
-        for song in song_paths:
-            segments = list(self.generator.generate_segments(
-                song['vocal'],
-                [song['guitar'], song['bass'], song['drums']]
-            ))
-            self.segments.extend(segments)
-    
-    def __len__(self) -> int:
-        return len(self.segments)
-    
-    def __getitem__(self, idx: int) -> Dict:
-        return self.segments[idx]
-
 """
 Usage would look like:
 
