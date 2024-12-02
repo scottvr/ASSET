@@ -17,7 +17,7 @@ StemProver introduces a novel approach to source separation artifact reduction b
 ## Technical Innovation
 
 ### Core Architecture
-- Implements phase-aware ControlNet architecture for spectrogram manipulation
+- Implements a phase-aware ControlNet architecture for spectrogram manipulation
 - Preserves complex phase relationships through dedicated processing paths
 - Utilizes zero-convolution design for efficient gradient propagation
 - Maintains frequency-dependent phase weighting based on perceptual importance
