@@ -95,6 +95,7 @@ or
 
 <details open>
     <summary> for everyone else! </summary>
+
 # StemProver: Making Music Clearer Through AI Innovation
 
 ## What Does It Do?
