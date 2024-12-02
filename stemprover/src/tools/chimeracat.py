@@ -41,16 +41,22 @@ from typing import Dict, List, Set, Optional, Pattern
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from graphscii import ASCIIGraphRenderer, LayoutOptions, NodeStyle    
 
-class CompressionLevel(Enum):
-    SIGNATURES = "signatures"  # Just interfaces/types/docstrings
-    ESSENTIAL = "essential"    # + Core logic, skip standard patterns
-    VERBOSE = "verbose"        # Everything except obvious boilerplate
-    FULL = "full"             # Complete code
+from enum import Enum
+from typing import Dict, List, Set, Optional, Pattern
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+
+class SummaryLevel(Enum):
+    INTERFACE = "interface"     # Just interfaces/types/docstrings
+    CORE = "core"              # + Core logic, skip standard patterns
+    NONE = "none"      # Full code
 
 @dataclass
-class CompressionPattern:
-    """Pattern for code compression with explanation"""
+class SummaryPattern:
+    """Pattern for code summarization with explanation"""
     pattern: str
     replacement: str
     explanation: str
@@ -61,67 +67,41 @@ class CompressionPattern:
                      content, flags=self.flags)
 
 @dataclass
-class CompressionRules:
-    """Collection of compression patterns for different levels"""
-    signatures: List[CompressionPattern] = field(default_factory=list)
-    essential: List[CompressionPattern] = field(default_factory=list)
-    verbose: List[CompressionPattern] = field(default_factory=list)
-
-@dataclass
-class CompressionRules:
-    """Collection of compression patterns for different levels"""
-    signatures: List[CompressionPattern] = field(default_factory=list)
-    essential: List[CompressionPattern] = field(default_factory=list)
-    verbose: List[CompressionPattern] = field(default_factory=list)
+class SummaryRules:
+    """Collection of patterns for different summary levels"""
+    interface: List[SummaryPattern] = field(default_factory=list)
+    core: List[SummaryPattern] = field(default_factory=list)
 
     @classmethod
-    def default_rules(cls) -> 'CompressionRules':
+    def default_rules(cls) -> 'SummaryRules':
         return cls(
-            signatures=[
-                CompressionPattern(
-                    # Preserve class name and inheritance
-                    pattern=r'(class\s+\w+(?:\s*\([^)]*\))?):(?:\s*"""(?:.*?)""")?.*?(?=(?:class|def|\Z))',
-                    replacement=r'\1:\n    ... # Class implementation elided',
-                    explanation="Class implementation details elided",
-                    flags=re.MULTILINE | re.DOTALL
+            interface=[
+                SummaryPattern(
+                    pattern=r'(class\s+\w+(?:\([^)]*\))?):(?:\s*"""[^"]*""")?[^\n]*(?:\n(?!class|def)[^\n]*)*',
+                    replacement=r'\1:\n    ... # Class interface preserved',
+                    explanation="Class interface preserved",
+                    flags=re.MULTILINE
                 ),
-                CompressionPattern(
-                    # Preserve function signature
-                    pattern=r'(def\s+\w+\s*\([^)]*\)):(?:\s*"""(?:.*?)""")?.*?(?=(?:class|def|\Z))',
-                    replacement=r'\1:\n    ... # Function implementation elided',
-                    explanation="Function implementation details elided",
-                    flags=re.MULTILINE | re.DOTALL
+                SummaryPattern(
+                    pattern=r'(def\s+\w+\s*\([^)]*\)):(?:\s*"""[^"]*""")?[^\n]*(?:\n(?!class|def)[^\n]*)*',
+                    replacement=r'\1:\n    ... # Function interface preserved',
+                    explanation="Function signature preserved",
+                    flags=re.MULTILINE
                 )
             ],
-            essential=[
-                CompressionPattern(
-                    # Preserve getter method names
-                    pattern=r'(def\s+get_\w+\([^)]*\)):\s*return [^;{}]+?\n',
-                    replacement=r'\1:\n    ... # Simple getter elided',
-                    explanation="Simple getter method"
+            core=[
+                SummaryPattern(
+                    pattern=r'(def\s+get_\w+\([^)]*\)):\s*return[^\n]*\n',
+                    replacement=r'\1:\n    ... # Simple getter summarized',
+                    explanation="Getter method summarized"
                 ),
-                CompressionPattern(
-                    # Preserve init signature
-                    pattern=r'(def\s*__init__\s*\([^)]*\)):\s*(?:[^{};]+?\n\s+)+?(?=\n\s*\w|$)',
-                    replacement=r'\1:\n    ... # Standard initialization elided',
-                    explanation="Standard initialization"
-                )
-            ],
-            verbose=[
-                CompressionPattern(
-                    pattern=r'if\s+__name__\s*==\s*"__main__":\s*(?:[^{};]+?\n\s*)+?(?=\n\s*\w|$)',
-                    replacement='if __name__ == "__main__":\n    ... # Main execution block elided',
-                    explanation="Main execution block"
-                ),
-                CompressionPattern(
-                    # Preserve str method signature
-                    pattern=r'(def\s+__str__\s*\([^)]*\)):\s*return [^;{}]+?\n',
-                    replacement=r'\1:\n    ... # String representation elided',
-                    explanation="String representation"
+                SummaryPattern(
+                    pattern=r'(def\s*__init__\s*\([^)]*\)):[^\n]*(?:\n(?!def|class)[^\n]*)*',
+                    replacement=r'\1:\n    ... # Initialization summarized',
+                    explanation="Standard initialization summarized"
                 )
             ]
-        )
-
+        ) 
 @dataclass
 class ModuleInfo:
     """Information about a Python module"""
@@ -134,13 +114,14 @@ class ModuleInfo:
 class ChimeraCat:
     """Utility to concatenate modular code into Colab-friendly single files"""
     def __init__(self, 
-                 src_dir: str = "src", 
-                 compression_level: CompressionLevel = CompressionLevel.FULL,
-                 exclude_patterns: List[str] = None, rules: Optional[CompressionRules] = None,
-                 debug: bool = False):
+             src_dir: str = "src", 
+             summary_level: SummaryLevel = SummaryLevel.NONE,
+             exclude_patterns: List[str] = None,
+             rules: Optional[SummaryRules] = None,
+             debug: bool = False):
         self.src_dir = Path(src_dir)
-        self.compression_level = compression_level
-        self.rules = rules or CompressionRules.default_rules()
+        self.summary_level = summary_level
+        self.rules = rules or SummaryRules.default_rules()
         self.modules: Dict[Path, ModuleInfo] = {}
         self.dep_graph = nx.DiGraph()
         self.self_path = Path(__file__).resolve()
@@ -195,8 +176,12 @@ class ChimeraCat:
             functions=functions
         )
 
+
     def _process_imports(self, content: str, module_path: Path) -> str:
         """Process and adjust imports for concatenated context"""
+        if not isinstance(content, str):
+            raise TypeError(f"Expected string content but got {type(content)}: {content}")
+
         def replace_relative_import(match: re.Match) -> str:
             indent = len(match.group()) - len(match.group().lstrip())
             spaces = ' ' * indent
@@ -205,7 +190,44 @@ class ChimeraCat:
         
         pattern = r'^\s*from\s+\..*$'
         return re.sub(pattern, replace_relative_import, content, flags=re.MULTILINE)
-    
+
+    def _summarize_content(self, content: str) -> str:
+        """Apply summary patterns based on current level"""
+        if not isinstance(content, str):
+            raise TypeError(f"Expected string content but got {type(content)}: {content}")
+            
+        if self.summary_level == SummaryLevel.NONE:
+            return content
+            
+        result = content
+        rules = self.rules or SummaryRules.default_rules()
+        
+        # Apply patterns based on level
+        if self.summary_level == SummaryLevel.INTERFACE:
+            for pattern in rules.interface:
+                result = pattern.apply(result)
+        elif self.summary_level == SummaryLevel.CORE:
+            # Apply both interface and core patterns
+            for pattern in rules.interface + rules.core:
+                result = pattern.apply(result)
+                
+        return result
+
+    def _process_imports(self, content: str, module_path: Path) -> str:
+        """Process and adjust imports for concatenated context"""
+        if not isinstance(content, str):
+            raise TypeError(f"Expected string content but got {type(content)}: {content}")
+
+        def replace_relative_import(match: re.Match) -> str:
+            indent = len(match.group()) - len(match.group().lstrip())
+            spaces = ' ' * indent
+            original_line = match.group()
+            return f'{spaces}"""RELATIVE_IMPORT: \n{original_line}\n{spaces}"""'
+        
+        pattern = r'^\s*from\s+\..*$'
+        return re.sub(pattern, replace_relative_import, content, flags=re.MULTILINE)
+
+
     def build_dependency_graph(self):
         """Build a dependency graph of all Python files"""
         # First pass: Collect all modules and create nodes
@@ -248,7 +270,7 @@ class ChimeraCat:
         self.build_dependency_graph()
         
         header = f"""{self._get_header_content()}
-        # Compression Level: {self.compression_level.value}
+        # Summary Level: {self.summary_level.value}
         """
         
         # Start with external imports
@@ -273,9 +295,9 @@ class ChimeraCat:
                 module = self.modules[file_path]
                 rel_path = file_path.relative_to(self.src_dir)
                 
-                # Process imports and compress content
+                # Process imports and summarize content
                 processed_content = self._process_imports(
-                    self._compress_content(module.content),
+                    self._summarize_content(module.content),
                     file_path
                 )
                 
@@ -406,29 +428,6 @@ class ChimeraCat:
             ])
         
         return '\n'.join(report)
-    
-    
-    def _compress_content(self, content: str) -> str:
-        """Apply compression based on current level"""
-        if self.compression_level == CompressionLevel['FULL']:
-            return content
-
-        compressed = content
-        patterns = []
-        
-        # Apply patterns based on level
-        if self.compression_level == CompressionLevel.SIGNATURES:
-            patterns = self.rules.signatures
-        elif self.compression_level == CompressionLevel.ESSENTIAL:
-            patterns = self.rules.signatures + self.rules.essential
-        elif self.compression_level == CompressionLevel.VERBOSE:
-            patterns = self.rules.verbose
-
-        # Apply each pattern
-        for pattern in patterns:
-            compressed = pattern.apply(compressed)
-
-        return compressed
 
     def _get_header_content(self):
         return  f"""
@@ -494,34 +493,43 @@ class ChimeraCat:
     
     def generate_dependency_ascii(self) -> str:
         """Generate ASCII representation of dependency graph"""
-        from networkx.drawing import nx_pydot
-        import pydot
+        # Create a new graph with relative paths as node names
+        display_graph = nx.DiGraph()
         
-        # Convert to DOT format
-        dot_data = nx_pydot.to_pydot(self.dep_graph)
+        # Add nodes and edges with relative path names
+        for node in self.dep_graph.nodes():
+            try:
+                rel_path = node.relative_to(self.src_dir)
+                display_graph.add_node(str(rel_path))
+            except ValueError:
+                display_graph.add_node(str(node))
         
-        # For cleaner output, use relative paths
-        for node in dot_data.get_nodes():
-            if node.get_name():
-                path = Path(node.get_name().strip('"'))
-                try:
-                    rel_path = path.relative_to(self.src_dir)
-                    node.set_name(f'"{rel_path}"')
-                except ValueError:
-                    pass
+        # Add edges using new node names
+        for src, dst in self.dep_graph.edges():
+            src_name = str(src.relative_to(self.src_dir))
+            dst_name = str(dst.relative_to(self.src_dir))
+            display_graph.add_edge(src_name, dst_name)
         
+        options = LayoutOptions(
+            node_style=NodeStyle.MINIMAL,
+            node_spacing=6,
+            layer_spacing=2
+        )
+        renderer = ASCIIGraphRenderer(display_graph, options)
         ascii_art = f"""
-Directory Structure:
-{self._get_tree_output()}
-    
-Module Dependencies:
-{self._dot_to_ascii(dot_data.to_string())}
-    
-Import Summary:
-{self._generate_import_summary()}
-    """
+    Directory Structure:
+    {self._get_tree_output()}
+        
+    Module Dependencies:
+
+    {renderer.render()}
+        
+    Import Summary:
+    {self._generate_import_summary()}
+        """
         return ascii_art
-    
+
+
     def _get_tree_output(self) -> str:
         """Get tree command output"""
         try:
@@ -536,20 +544,6 @@ Import Summary:
             # Fallback to simple directory listing if tree not available
             return '\n'.join(str(p.relative_to(self.src_dir)) 
                             for p in self.src_dir.rglob('*.py'))
-    
-    def _dot_to_ascii(self, dot_string: str) -> str:
-        """Convert DOT format to ASCII art"""
-        try:
-            import subprocess
-            result = subprocess.run(
-                ['graph-easy'],
-                input=dot_string,
-                capture_output=True,
-                text=True
-            )
-            return result.stdout
-        except FileNotFoundError:
-            return "graph-easy not found. Install with: cpan Graph::Easy"
     
     def _generate_import_summary(self) -> str:
         """Generate summary of imports"""
@@ -573,20 +567,19 @@ Import Summary:
     
 def main():
     debug = True
-    # Example with different compression levels
+    # Example with different summary levels
     examples = {
-        CompressionLevel.SIGNATURES: "signatures_only.py",
-        CompressionLevel.ESSENTIAL: "essential_code.py",
-        CompressionLevel.VERBOSE: "verbose_code.py",
-        CompressionLevel.FULL: "full_code.py"
+        SummaryLevel.INTERFACE: "signatures_only.py",
+        SummaryLevel.CORE: "essential_code.py",
+        SummaryLevel.NONE: "complete_code.py",
     }
     
     for level, filename in examples.items():
-        cat = ChimeraCat("..\\src", compression_level=level, debug=debug)
+        cat = ChimeraCat("..\\src", summary_level=level, debug=debug)
         output_file = cat.generate_concat_file(filename)
         print(f"Generated {level.value} version: {output_file}")
     
-    cat = ChimeraCat("src", CompressionLevel.FULL, debug=debug)
+    cat = ChimeraCat("src", SummaryLevel.NONE, debug=debug)
     output_file = cat.generate_colab_notebook()
     print(f"Generated colab notebook  version: {output_file}")
 

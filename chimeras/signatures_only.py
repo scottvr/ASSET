@@ -5,13 +5,13 @@
 #  /\___/\  ChimeraCat
 # ( o   o )  Modular Python Fusion
 # (  =^=  )
-#  (______)  Generated: 2024-11-27 00:38:49
-        # Compression Level: signatures
+#  (______)  Generated: 2024-11-27 06:29:53
+        # Summary Level: interface
         
 """
 
-Directory Structure:
-stemprover\__init__.py
+    Directory Structure:
+    stemprover\__init__.py
 stemprover\analysis\base.py
 stemprover\analysis\artifacts\base.py
 stemprover\analysis\artifacts\high_freq.py
@@ -40,19 +40,25 @@ stemprover\separation\spleeter.py
 stemprover\training\dataset.py
 stemprover\training\pairs.py
 tools\chimeracat.py
-    
-Module Dependencies:
-graph-easy not found. Install with: cpan Graph::Easy
-    
-Import Summary:
+        
+    Module Dependencies:
 
+    
+
+
+  stemprover\__init__.py      stemprover\analysis\artifacts\base.py      stemprover\analysis\artifacts\high_freq.py      stemprover\analysis\artifacts\preprocessor.py      stemprover\analysis\artifacts\spectral.py      stemprover\analysis\base.py      stemprover\analysis\selection\__init__.py      stemprover\analysis\selection\metrics.py      stemprover\analysis\selection\segment_finder.py      stemprover\common\__init__.py      stemprover\common\audio_utils.py      stemprover\common\math_utils.py      stemprover\common\spectral_utils.py      stemprover\common\types.py      stemprover\core\audio.py      stemprover\core\config.py      stemprover\core\types.py      stemprover\enhancement\base.py      stemprover\enhancement\controlnet.py      stemprover\enhancement\training.py      stemprover\io\audio.py      stemprover\preparation\base.py      stemprover\preparation\segments\__init__.py      stemprover\preparation\segments\generator.py      stemprover\separation\base.py      stemprover\separation\spleeter.py      stemprover\training\dataset.py      stemprover\training\pairs.py
+
+
+        
+    Import Summary:
+    
     External Dependencies:
     abc, common.audio_utils, common.spectral_utils, common.types, core.audio, core.types, dataclasses, datetime, enum, json, librosa, matplotlib.pyplot as plt, numpy as np, pathlib, soundfile as sf, spleeter.separator, tensorflow as tf, torch, torch.nn as nn, torch.nn.functional as F, torch.utils.data, typing
     
     Internal Dependencies:
     ...common.audio_utils, ...common.math_utils, ...common.types, ...core.audio, ...core.types, ..analysis.spectral, ..core.audio, ..core.types, ..io.audio, .analysis.base, .analysis.phase, .analysis.spectral, .audio, .audio_utils, .base, .core.audio, .core.types, .diffusion.models, .diffusion.training, .math_utils, .metrics, .preparation.segments, .separation.base, .separation.spleeter, .spectral_utils, .types
     
-    
+        
 # External imports
 """
 import abc
@@ -85,29 +91,49 @@ import typing
 """Stemprover - audio stem separation enhancement tools"""
 
 try:
-    """from ._version import version as __version__  # Original relative import"""
+    """RELATIVE_IMPORT: 
+    from ._version import version as __version__
+    """
 except ImportError:
     __version__ = "unknown"
 
 # Core imports
-"""from .core.audio import AudioSegment  # Original relative import"""
-"""from .core.types import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .core.audio import AudioSegment
+"""
+"""RELATIVE_IMPORT: 
+from .core.types import (
+"""
     ProcessingConfig,
     SeparationResult
 )
 
 # Separation components
-"""from .separation.base import VocalSeparator  # Original relative import"""
-"""from .separation.spleeter import SpleeterSeparator  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .separation.base import VocalSeparator
+"""
+"""RELATIVE_IMPORT: 
+from .separation.spleeter import SpleeterSeparator
+"""
 
 # Analysis components
-"""from .analysis.base import VocalAnalyzer  # Original relative import"""
-"""from .analysis.spectral import SpectralAnalyzer  # Original relative import"""
-"""from .analysis.phase import PhaseAnalyzer  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .analysis.base import VocalAnalyzer
+"""
+"""RELATIVE_IMPORT: 
+from .analysis.spectral import SpectralAnalyzer
+"""
+"""RELATIVE_IMPORT: 
+from .analysis.phase import PhaseAnalyzer
+"""
 
 # Future diffusion components
-"""from .diffusion.models import PhaseAwareLoRA  # Original relative import"""
-"""from .diffusion.training import PhaseAwareTrainer  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .diffusion.models import PhaseAwareLoRA
+"""
+"""RELATIVE_IMPORT: 
+from .diffusion.training import PhaseAwareTrainer
+"""
 
 __all__ = [
     # Version
@@ -135,85 +161,125 @@ __all__ = [
 # From stemprover\analysis\base.py
 from abc import ABC, abstractmethod
 from pathlib import Path
-"""from ..core.audio import AudioSegment  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ..core.audio import AudioSegment
+"""
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class VocalAnalyzer(ABC):
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\analysis\artifacts\base.py
-"""from ...common.types import AudioArray, SpectrogramArray, TensorType  # Original relative import"""
-"""from ...common.audio_utils import create_spectrogram  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ...common.types import AudioArray, SpectrogramArray, TensorType
+"""
+"""RELATIVE_IMPORT: 
+from ...common.audio_utils import create_spectrogram
+"""
 
 from abc import ABC, abstractmethod
 import numpy as np
 import torch
 import torch.nn as nn
 from dataclasses import dataclass
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+
+@dataclass
+class ValidationMetrics:
+    ... # Class interface preserved # Class interface preserved
+
+class ArtifactProcessor(ABC):
+    ... # Class interface preserved # Class interface preserved
+
+class ControlNetProcessor(ArtifactProcessor):
+    ... # Class interface preserved # Class interface preserved
+
+class SignalProcessor(ArtifactProcessor):
+    ... # Class interface preserved # Class interface preserved
+
+class HybridProcessor(ArtifactProcessor):
+    ... # Class interface preserved # Class interface preserved
+
+def run_validation(
+    processor: ArtifactProcessor,
+    test_cases: List[Tuple[AudioSegment, AudioSegment, AudioSegment]],
+    artifact_types: List[str]
+) -> Dict[str, List[ValidationMetrics]]:
+    """Run validation suite on processor"""
+    
+    results = {artifact_type: [] for artifact_type in artifact_types}
+    
+    for clean, artifacts, mixed in test_cases:
+        for artifact_type in artifact_types:
+            # Time and memory measurement wrapper
+            start_time = time.time()
+            start_mem = psutil.Process().memory_info().rss
+            
+            # Process audio
+            processed = processor.process(mixed, artifact_type)
+            
+            # Get metrics
+            metrics = processor.validate(clean, processed, artifacts)
+            metrics.processing_time = time.time() - start_time
+            metrics.memory_usage = (
+                psutil.Process().memory_info().rss - start_mem
+            ) / 1024 / 1024  # MB
+            
+            results[artifact_type].append(metrics)
+    
+    return results
 
 # From stemprover\analysis\artifacts\high_freq.py
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class HighFrequencyArtifactPreprocessor(nn.Module):
+    ... # Class interface preserved # Class interface preserved
+
+def generate_training_pair(
+    clean_audio: torch.Tensor,
+    separated_audio: torch.Tensor,
+    preprocessor: HighFrequencyArtifactPreprocessor
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Generate training pair for ControlNet
+    Returns:
+        condition: Control signal from preprocessor
+        input_spec: Separated audio spectrogram
+        target_spec: Clean audio spectrogram
+    """
+    # Convert both to spectrograms
+    clean_spec = audio_to_spectrogram(clean_audio)
+    sep_spec = audio_to_spectrogram(separated_audio)
+    
+    # Generate control signal
+    condition = preprocessor(sep_spec)
+    
+    return condition, sep_spec, clean_spec
 
 # From stemprover\analysis\artifacts\preprocessor.py
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class HighFrequencyArtifactPreprocessor(nn.Module):
+    ... # Class interface preserved # Class interface preserved
+
+def generate_training_pair(
+    clean_audio: torch.Tensor,
+    separated_audio: torch.Tensor,
+    preprocessor: HighFrequencyArtifactPreprocessor
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Generate training pair for ControlNet
+    Returns:
+        condition: Control signal from preprocessor
+        input_spec: Separated audio spectrogram
+        target_spec: Clean audio spectrogram
+    """
+    # Convert both to spectrograms
+    clean_spec = audio_to_spectrogram(clean_audio)
+    sep_spec = audio_to_spectrogram(separated_audio)
+    
+    # Generate control signal
+    condition = preprocessor(sep_spec)
+    
+    return condition, sep_spec, clean_spec
+
 
 # From stemprover\analysis\artifacts\spectral.py
 from pathlib import Path
@@ -221,61 +287,90 @@ import json
 import matplotlib.pyplot as plt
 from typing import Dict
 from datetime import datetime
+ """RELATIVE_IMPORT: 
 
-"""from ...common.types import (  # Original relative import"""
+from ...common.types import (
+ """
     AudioArray, SpectrogramArray, FrequencyBands,
     DEFAULT_FREQUENCY_BANDS
 )
-"""from ...common.audio_utils import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ...common.audio_utils import (
+"""
     create_spectrogram, get_frequency_bins, get_band_mask
 )
-"""from ...common.math_utils import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ...common.math_utils import (
+"""
     magnitude, angle, phase_difference, phase_coherence,
     rms, db_scale
 )
-"""from ...core.audio import AudioSegment  # Original relative import"""
-"""from ...core.types import ProcessingConfig  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ...core.audio import AudioSegment
+"""
+"""RELATIVE_IMPORT: 
+from ...core.types import ProcessingConfig
+"""
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class SpectralAnalyzer:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\analysis\selection\metrics.py
 from dataclasses import dataclass
 
 @dataclass
-    ... # Implementation details elided
+class SegmentMetrics:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\analysis\selection\segment_finder.py
 from dataclasses import dataclass
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+from typing import List, Dict
+import numpy as np
+import librosa
+
+from common.types import AudioArray, SpectrogramArray
+from common.audio_utils import create_spectrogram, calculate_onset_variation
+from common.spectral_utils import calculate_band_energy
+from core.types import ProcessingConfig
+"""RELATIVE_IMPORT: 
+from .metrics import SegmentMetrics
+"""
+
+class TestSegmentFinder:
+    ... # Class interface preserved # Class interface preserved
+
+def find_best_segments(
+    vocal_track: AudioArray,
+    backing_track: AudioArray,
+    segment_length: int,
+    hop_length: int,
+    config: ProcessingConfig,
+    top_k: int = 5
+) -> List[Dict]:
+    """Find the best segments for testing"""
+    finder = TestSegmentFinder(config)
+    segments = []
+    
+    for start in range(0, len(vocal_track) - segment_length, hop_length):
+        end = start + segment_length
+        
+        vocal_segment = vocal_track[start:end]
+        backing_segment = backing_track[start:end]
+        
+        metrics = finder.analyze_segment(vocal_segment, backing_segment)
+        
+        segments.append({
+            'start': start,
+            'end': end,
+            'metrics': metrics,
+            'time': start / config.sample_rate
+        })
+    
+    # Sort by score and return top_k
+    segments.sort(key=lambda x: x['metrics'].score, reverse=True)
+    return segments[:top_k]
 
 # From stemprover\analysis\selection\__init__.py
 
@@ -284,51 +379,143 @@ def
 import numpy as np
 import librosa
 import soundfile as sf
-"""from .types import AudioArray, SpectrogramArray, FrequencyBands  # Original relative import"""
-"""from .math_utils import magnitude, angle, phase_difference, phase_coherence, rms  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .types import AudioArray, SpectrogramArray, FrequencyBands
+"""
+"""RELATIVE_IMPORT: 
+from .math_utils import magnitude, angle, phase_difference, phase_coherence, rms
+"""
 
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+def to_mono(audio: AudioArray) -> AudioArray:
+    """Convert audio to mono if stereo"""
+    if len(audio.shape) == 1:
+        return audio
+    return librosa.to_mono(audio.T)
+
+def create_spectrogram(audio: AudioArray, **stft_params) -> SpectrogramArray:
+    """Create spectrogram with standard parameters"""
+    return librosa.stft(audio, **stft_params)
+
+def get_frequency_bins(sr: int, n_fft: int) -> np.ndarray:
+    """Get frequency bins for STFT"""
+    return librosa.fft_frequencies(sr=sr, n_fft=n_fft)
+
+def get_band_mask(freq_bins: np.ndarray, low_freq: float, high_freq: float) -> np.ndarray:
+    """Get boolean mask for frequency band"""
+    return (freq_bins >= low_freq) & (freq_bins <= high_freq)
+
+def calculate_dynamic_range(self, audio: AudioArray) -> float:
+    """Calculate dynamic range in dB"""
+    # Use RMS with small windows
+    frame_length = 2048
+    hop_length = 512
+        
+    rms = librosa.feature.rms(
+        y=audio,
+        frame_length=frame_length,
+        hop_length=hop_length
+    )
+        
+    db_range = librosa.amplitude_to_db(rms.max()) - librosa.amplitude_to_db(rms.min())
+    return float(db_range)
+    
+def calculate_phase_complexity(self,
+                              vocal_spec: SpectrogramArray,
+                              mix_spec: SpectrogramArray) -> float:
+    """Measure complexity of phase relationships"""
+    vocal_phase = np.angle(vocal_spec)
+    mix_phase = np.angle(mix_spec)
+        
+    # Calculate phase differences and their variation
+    phase_diff = np.abs(vocal_phase - mix_phase)
+    return float(np.std(phase_diff))
+    
+def calculate_onset_variation(
+    audio: AudioArray,
+    sample_rate: int,
+    normalize: bool = True
+) -> float:
+    """
+    Calculate variation in onset strength as a measure of transitions.
+    
+    Args:
+        audio: Input audio array
+        sample_rate: Audio sample rate
+        normalize: Whether to normalize the variation score
+        
+    Returns:
+        Float indicating amount of transition variation
+    """
+    onset_env = librosa.onset.onset_strength(
+        y=audio,
+        sr=sample_rate
+    )
+    
+    variation = np.std(onset_env)
+    
+    if normalize:
+        # Normalize to 0-1 range based on typical values
+        variation = variation / (variation + 1.0)
+        
+    return float(variation)
 
 # From stemprover\common\math_utils.py
 import numpy as np
-"""from .types import AudioArray, SpectrogramArray  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .types import AudioArray, SpectrogramArray
+"""
 
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+def angle(complex_spec: SpectrogramArray) -> SpectrogramArray:
+    """Get phase angle from complex spectrogram"""
+    return np.angle(complex_spec)
+
+def magnitude(complex_spec: SpectrogramArray) -> SpectrogramArray:
+    """Get magnitude from complex spectrogram"""
+    return np.abs(complex_spec)
+
+def phase_difference(spec1: SpectrogramArray, spec2: SpectrogramArray) -> SpectrogramArray:
+    """Compute phase difference between spectrograms"""
+    return np.abs(angle(spec1) - angle(spec2))
+
+def phase_coherence(phase_diff: SpectrogramArray) -> float:
+    """Compute phase coherence from phase difference"""
+    return float(np.mean(np.cos(phase_diff)))
+
+def rms(array: AudioArray) -> float:
+    """Compute root mean square"""
+    return float(np.sqrt(np.mean(array ** 2)))
+
+def db_scale(spec: SpectrogramArray, ref: float = None) -> SpectrogramArray:
+    """Convert to dB scale"""
+    return librosa.amplitude_to_db(magnitude(spec), ref=ref)
+
 
 # From stemprover\common\spectral_utils.py
 import numpy as np
 import librosa
 import soundfile as sf
 from typing import Tuple
-"""from .types import AudioArray, SpectrogramArray, FrequencyBand  # Original relative import"""
-"""from .audio_utils import get_band_mask  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .types import AudioArray, SpectrogramArray, FrequencyBand
+"""
+"""RELATIVE_IMPORT: 
+from .audio_utils import get_band_mask
+"""
 
-def
-    ... # Implementation details elided
+def calculate_band_energy(
+    spec: SpectrogramArray,
+    freqs: np.ndarray,
+    band: Tuple[float, float],
+    relative: bool = True
+) -> float:
+    """Calculate energy in specific frequency band"""
+    band_mask = get_band_mask(freqs, band[0], band[1])
+    band_energy = np.mean(np.abs(spec[band_mask]))
+    
+    if relative:
+        total_energy = np.mean(np.abs(spec))
+        return band_energy / (total_energy + 1e-8)
+    return band_energy
 
 # From stemprover\common\types.py
 from typing import Union, List, Dict, Optional, Tuple, Any
@@ -356,120 +543,154 @@ DEFAULT_FREQUENCY_BANDS: FrequencyBands = {
     "brilliance": (6000, 20000)
 }
 
+
 # From stemprover\common\__init__.py
-"""from .types import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .types import (
+"""
     AudioArray, SpectrogramArray, TensorType, 
     FrequencyBand, FrequencyBands, DEFAULT_FREQUENCY_BANDS
 )
-"""from .audio_utils import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .audio_utils import (
+"""
     to_mono, create_spectrogram, get_frequency_bins, get_band_mask
 )
-"""from .math_utils import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .math_utils import (
+"""
     angle, magnitude, phase_difference, phase_coherence, rms, db_scale
 )
-"""from .spectral_utils import (  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from .spectral_utils import (
+"""
     calculate_band_energy
 )
 
 # From stemprover\core\audio.py
 from dataclasses import dataclass
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+import numpy as np
+import librosa
+from typing import Optional
+
+@dataclass
+class AudioSegment:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\core\config.py
 from dataclasses import dataclass
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
+from enum import Enum, auto
+from pathlib import Path
+from typing import Optional
+
+class SeparatorBackend(Enum):
+    ... # Class interface preserved # Class interface preserved
+
+class SeparationProfile:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\core\types.py
 from dataclasses import dataclass
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+from pathlib import Path
+from typing import Dict, Optional, Any
+import matplotlib.pyplot as plt
+"""RELATIVE_IMPORT: 
+from .audio import AudioSegment
+"""
+
+@dataclass
+class ProcessingConfig:
+    ... # Class interface preserved # Class interface preserved
+
+class SeparationResult:
+    ... # Class interface preserved # Class interface preserved
+
+class SegmentConfig:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\enhancement\base.py
 from abc import ABC, abstractmethod
 from typing import Optional
-"""from ...core.audio import AudioSegment  # Original relative import"""
-"""from ...core.types import ProcessingConfig  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ...core.audio import AudioSegment
+"""
+"""RELATIVE_IMPORT: 
+from ...core.types import ProcessingConfig
+"""
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class EnhancementProcessor(ABC):
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\enhancement\controlnet.py
 import torch
 import torch.nn as nn
 from typing import Optional, List, Tuple
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class ArtifactDetector(nn.Module):
+    ... # Class interface preserved # Class interface preserved
+
+class PhaseAwareZeroConv(nn.Module):
+    ... # Class interface preserved # Class interface preserved
+
+class PhaseAwareControlNet(nn.Module):
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\enhancement\training.py
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class ArtifactDataset(Dataset):
+    ... # Class interface preserved # Class interface preserved
+
+class ControlNetTrainer:
+    ... # Class interface preserved # Class interface preserved
+
+def prepare_training(
+    clean_dir: str,
+    separated_dir: str,
+    batch_size: int = 8,
+    val_split: float = 0.1
+) -> Tuple[DataLoader, DataLoader]:
+    # Get audio paths
+    clean_paths = sorted(glob.glob(f'{clean_dir}/*.wav'))
+    separated_paths = sorted(glob.glob(f'{separated_dir}/*.wav'))
+    
+    # Split train/val
+    split_idx = int(len(clean_paths) * (1 - val_split))
+    
+    # Create datasets
+    preprocessor = HighFrequencyArtifactPreprocessor()
+    train_dataset = ArtifactDataset(
+        clean_paths[:split_idx],
+        separated_paths[:split_idx],
+        preprocessor
+    )
+    val_dataset = ArtifactDataset(
+        clean_paths[split_idx:],
+        separated_paths[split_idx:],
+        preprocessor
+    )
+    
+    # Create dataloaders
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=4
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=4
+    )
+    
+    return train_loader, val_loader
 
 # From stemprover\io\audio.py
 from pathlib import Path
@@ -477,71 +698,91 @@ import numpy as np
 import soundfile as sf
 import librosa
 from typing import Tuple
-"""from ..core.audio import AudioSegment  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ..core.audio import AudioSegment
+"""
 
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+def load_audio_file(path: str, sr: int = 44100, mono: bool = False) -> Tuple[np.ndarray, int]:
+    """Load audio file with error handling and validation"""
+    try:
+        audio, file_sr = librosa.load(path, sr=sr, mono=mono)
+        return audio, file_sr
+    except Exception as e:
+        raise RuntimeError(f"Error loading audio file {path}: {str(e)}")
+
+def save_audio_file(audio: AudioSegment, path: Path) -> None:
+    """Save audio file with proper format handling"""
+    try:
+        # Handle different array shapes
+        audio_to_save = audio.audio
+        if audio.is_stereo:
+            # Convert from (2, samples) to (samples, 2)
+            audio_to_save = audio.audio.T
+            
+        sf.write(str(path), audio_to_save, audio.sample_rate)
+    except Exception as e:
+        raise RuntimeError(f"Error saving audio file {path}: {str(e)}")
+
 
 # From stemprover\preparation\base.py
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple, Dict
-"""from ..core.types import SeparationResult  # Original relative import"""
-"""from ..core.audio import AudioSegment  # Original relative import"""
+"""RELATIVE_IMPORT: 
+from ..core.types import SeparationResult
+"""
+"""RELATIVE_IMPORT: 
+from ..core.audio import AudioSegment
+"""
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+class VocalSeparator(ABC):
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\preparation\segments\generator.py
 from pathlib import Path
 from typing import List, Tuple, Dict, Generator
 from dataclasses import dataclass
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
+
+from common.types import AudioArray
+from common.audio_utils import create_spectrogram
+from core.audio import AudioSegment
+from core.types import ProcessingConfig
+
+"""
+Key features:
+1. Configurable segment length and overlap
+2. Filters out segments with insufficient vocal content
+3. Creates multiple backing track combinations
+4. Generates spectrograms for training
+5. Preserves timing information for potential time-based analysis
+"""
+
+class TrainingSegmentGenerator:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\preparation\segments\__init__.py
 
 
 # From stemprover\separation\base.py
 from dataclasses import dataclass
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+from enum import Enum, auto
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
+@dataclass
+class SeparationProfile:
+    ... # Class interface preserved # Class interface preserved
+
+class SeparationResult:
+    ... # Class interface preserved # Class interface preserved
+
+class StemProcessor:
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\separation\spleeter.py
 import tensorflow as tf
@@ -550,66 +791,38 @@ import numpy as np
 from typing import Dict, Tuple, Optional
 from datetime import datetime
 from spleeter.separator import Separator as SpleeterBase
+ """RELATIVE_IMPORT: 
 
-"""from .base import VocalSeparator  # Original relative import"""
-"""from ..core.audio import AudioSegment  # Original relative import"""
-"""from ..core.types import SeparationResult  # Original relative import"""
-"""from ..io.audio import load_audio_file, save_audio_file  # Original relative import"""
-"""from ..analysis.spectral import SpectralAnalyzer  # Original relative import"""
+from .base import VocalSeparator
+ """
+"""RELATIVE_IMPORT: 
+from ..core.audio import AudioSegment
+"""
+"""RELATIVE_IMPORT: 
+from ..core.types import SeparationResult
+"""
+"""RELATIVE_IMPORT: 
+from ..io.audio import load_audio_file, save_audio_file
+"""
+"""RELATIVE_IMPORT: 
+from ..analysis.spectral import SpectralAnalyzer
+"""
 
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-default().__enter__()
-        
-        config = tf.compat.v1.ConfigProto()
-        config.gpu_options.allow_growth = True
-        self.session = tf.compat.v1.Session(graph=self.graph, config=config)
-        self.session.as_default().__enter__()
-        
-        # Initialize Spleeter only after graph/session setup
-        self.separator = SpleeterBase('spleeter:2stems')
+class SpleeterSeparator(VocalSeparator):
+    ... # Class interface preserved # Class interface preserved
 
-    def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-default().__exit__(None, None, None)
-                self.session.close()
-                delattr(self, 'session')
-            
-            if hasattr(self, 'graph'):
-                self.graph.as_default().__exit__(None, None, None)
-                delattr(self, 'graph')
-            
-        except Exception as e:
-            print(f"Warning during cleanup: {str(e)}")
-
-    @property
-    def
-    ... # Implementation details elided
 
 # From stemprover\training\dataset.py
 from torch.utils.data import Dataset, DataLoader
 from typing import List, Dict, Path
-"""from .core.types import ProcessingConfig, SegmentConfig  # Original relative import"""
-"""from .preparation.segments import TrainingSegmentGenerator  # Original relative import"""
-class
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
-def
-    ... # Implementation details elided
+"""RELATIVE_IMPORT: 
+from .core.types import ProcessingConfig, SegmentConfig
+"""
+"""RELATIVE_IMPORT: 
+from .preparation.segments import TrainingSegmentGenerator
+"""
+class TrainingDataset(Dataset):
+    ... # Class interface preserved # Class interface preserved
+
 
 # From stemprover\training\pairs.py
