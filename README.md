@@ -5,7 +5,7 @@
  </summary>
  
 <details>
-    <summary> for the AI Developer, ML Engineer, Researcher, Music Technologist, Data Scientist, etc. [Click to expand]
+    <summary> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. [Click to expand]
     </summary>
 
 # StemProver: Phase-Aware Audio Artifact Reduction via Controlled Latent Diffusion
