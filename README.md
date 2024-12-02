@@ -1,6 +1,9 @@
 # [ASSET] Audio Separation Stemfile Enhancement Toolkit
- Featuring StemProver - the Stem Improver
-
+<details open>
+ <summary>
+  Featuring StemProver - the Stem Improver
+ </summary>
+ 
 <details>
     <summary> for the AI Developer, ML Engineer, Researcher, Music Technologist, Data Scientist, etc. [Click to expand]
     </summary>
@@ -144,5 +147,5 @@ This project demonstrates how creative thinking in AI development can solve comp
 ---
 
 _StemProver is an open-source project developed to advance the state of music separation technology through innovative applications of AI technology._
-
+</details>
 </details>
