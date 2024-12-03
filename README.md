@@ -4,7 +4,7 @@
 current status
 
 
-While renaming the repo and doing some refactoring, I merged a documentation branch into main and pushed to github. The docs may make the project look more ready-for-primetimw than it is. 
+While renaming the repo and doing some refactoring, I merged a documentation branch into main and pushed to github. The docs may make the project look more ready-for-primetime than it is. 
 
 there is still quite a bit of code that is local to my machine only, including the training code, which like the rest of stemprover, is still under active development. 
 
