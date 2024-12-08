@@ -41,7 +41,7 @@ from typing import Dict, List, Set, Optional, Pattern
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from graphscii import ASCIIGraphRenderer, LayoutOptions, NodeStyle    
+from phart import ASCIIGraphRenderer, LayoutOptions, NodeStyle    
 
 from enum import Enum
 from typing import Dict, List, Set, Optional, Pattern
