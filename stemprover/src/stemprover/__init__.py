@@ -6,8 +6,8 @@ except ImportError:
     __version__ = "unknown"
 
 # Core imports
-from .core.audio import AudioSegment
-from .core.types import (
+from core.audio import AudioSegment
+from core.types import (
     ProcessingConfig,
     SeparationResult
 )
