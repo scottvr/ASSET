@@ -41,7 +41,7 @@ from typing import Dict, List, Set, Optional, Pattern
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from phart import ASCIIGraphRenderer, LayoutOptions, NodeStyle    
+from phart import ASCIIRenderer, LayoutOptions, NodeStyle    
 
 from enum import Enum
 from typing import Dict, List, Set, Optional, Pattern
@@ -229,41 +229,56 @@ class ChimeraCat:
 
 
     def build_dependency_graph(self):
-        """Build a dependency graph of all Python files"""
-        # First pass: Collect all modules and create nodes
+        """Build a dependency graph with proper relative import resolution"""
+        self._debug_print("\nBuilding dependency graph...")
+        
+        # First pass: Create nodes
         for file_path in self.src_dir.rglob("*.py"):
             module_info = self.analyze_file(file_path)
             if module_info is not None:
                 self.modules[file_path] = module_info
-                # Each file is a node in our graph
                 self.dep_graph.add_node(file_path)
+                self._debug_print(f"Added node: {file_path.relative_to(self.src_dir)}")
+                if module_info.imports:
+                    self._debug_print(f"  Found imports: {', '.join(module_info.imports)}")
         
-        # Second pass: Add edges based on imports
+        # Second pass: Add edges
         for file_path, module in self.modules.items():
-            pkg_path = file_path.relative_to(self.src_dir).parent
+            current_module = str(file_path.relative_to(self.src_dir)).replace('\\', '/')
+            module_dir = str(file_path.parent.relative_to(self.src_dir)).replace('\\', '/')
+            
             for imp in module.imports:
-                # Convert import to potential file paths
-                imp_parts = imp.split('.')
-                
-                # Handle different import types
-                if imp.startswith('.'):  # Relative import
-                    # Calculate actual path from relative import
-                    relative_depth = imp.count('.')
-                    target_path = pkg_path
-                    for _ in range(relative_depth - 1):
-                        target_path = target_path.parent
-                    remaining_parts = imp_parts[relative_depth:]
-                else:  # Absolute import
-                    remaining_parts = imp_parts
-
-                # Find matching module for this import
-                for other_path in self.modules:
-                    other_pkg = other_path.relative_to(self.src_dir).parent
-                    if self._paths_match(other_pkg, remaining_parts):
-                        # Add directed edge: file_path depends on other_path
-                        self.dep_graph.add_edge(file_path, other_path)
-
-                        print(f"    Added dependency: {file_path.name} -> {other_path.name}")
+                if imp.startswith('.'):
+                    # Handle relative imports
+                    dots = imp.count('.')
+                    parts = module_dir.split('/')
+                    
+                    # Go up directory tree based on dot count
+                    if dots > len(parts):
+                        continue  # Invalid relative import
+                        
+                    base_path = '/'.join(parts[:-dots] if dots > 0 else parts)
+                    target_module = imp.lstrip('.')
+                    
+                    if target_module:
+                        full_target = f"{base_path}/{target_module.replace('.', '/')}.py"
+                    else:
+                        full_target = f"{base_path}/__init__.py"
+                    
+                    # Find matching module
+                    for other_path in self.modules:
+                        other_rel = str(other_path.relative_to(self.src_dir)).replace('\\', '/')
+                        if other_rel == full_target:
+                            self._debug_print(f"  Adding edge: {other_rel} -> {current_module}")
+                            self.dep_graph.add_edge(file_path, other_path)
+                else:
+                    # Handle absolute imports within our project
+                    potential_path = imp.replace('.', '/') + '.py'
+                    for other_path in self.modules:
+                        other_rel = str(other_path.relative_to(self.src_dir)).replace('\\', '/')
+                        if other_rel.endswith(potential_path):
+                            self._debug_print(f"  Adding edge: {other_rel} -> {current_module}")
+                            self.dep_graph.add_edge(file_path, other_path)
 
     def generate_concat_file(self, output_file: str = "colab_combined.py") -> str:
         """Generate a single file combining all modules in dependency order"""
@@ -515,7 +530,7 @@ class ChimeraCat:
             node_spacing=6,
             layer_spacing=2
         )
-        renderer = ASCIIGraphRenderer(display_graph, options)
+        renderer = ASCIIRenderer(display_graph, options)
         ascii_art = f"""
     Directory Structure:
     {self._get_tree_output()}
@@ -575,7 +590,7 @@ def main():
     }
     
     for level, filename in examples.items():
-        cat = ChimeraCat("..\\src", summary_level=level, debug=debug)
+        cat = ChimeraCat("src", summary_level=level, debug=debug)
         output_file = cat.generate_concat_file(filename)
         print(f"Generated {level.value} version: {output_file}")
     
@@ -586,8 +601,10 @@ def main():
     if debug:
         cat.visualize_dependencies("module_deps.png")
         # Get detailed report
-        report = cat.get_dependency_report()
+        report = cat.generate_dependency_ascii()
         print(report)
+        #report = cat.get_dependency_report()
+        #print(report)
         # Generate visualization
 
 
