@@ -30,5 +30,5 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = {"" = "stemprover/src"}
+package-dir = {"stemprover" = "stemprover/src/stemprover"}
 packages = ["stemprover"]
