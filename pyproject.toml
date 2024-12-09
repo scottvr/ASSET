@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stemprover"
-version = "0.1.0"
+version = "0.1.1"
 description = "ASSET - Audio Separation Stemfile Enhancement Toolkit"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -30,5 +30,5 @@ dev = [
 ]
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = {"" = "stemprover/src"}
 packages = ["stemprover"]
