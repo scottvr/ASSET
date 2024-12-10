@@ -29,6 +29,5 @@ dev = [
     "isort",
 ]
 
-[tool.setuptools]
-package-dir = {"stemprover" = "stemprover/src/stemprover"}
-packages = ["stemprover"]
+[tool.setuptools.packages.find]
+where = ["stemprover"]
