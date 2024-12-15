@@ -7,9 +7,9 @@ StemProver introduces a novel approach to source separation artifact reduction b
 ## Technical Innovation
 
 ### Core Architecture
-- Implements phase-aware ControlNet architecture for spectrogram manipulation
-- Preserves complex phase relationships through dedicated processing paths
-- Utilizes zero-convolution design for efficient gradient propagation
+- Implements phase-aware latent diffusion architecture with LoRA-based fine-tuning for spectrogram manipulation
+- Preserves complex phase relationships through custom loss functions targeting phase coherence
+- Incorporates LoRA-based lightweight fine-tuning for minimal disruption to pretrained diffusion model weights
 - Maintains frequency-dependent phase weighting based on perceptual importance
 
 ### Key Features
@@ -27,7 +27,7 @@ StemProver introduces a novel approach to source separation artifact reduction b
 - Adaptive threshold determination for artifact detection
 
 ### Model Architecture
-- Modified ControlNet with phase-aware zero convolutions
+- Modified LoRA-based architecture with phase-aware zero convolutions
 - Specialized preprocessors for artifact type detection
 - Multiple LoRA adaptations for targeted artifact reduction
 - Frequency-band specific attention mechanisms
@@ -47,7 +47,7 @@ StemProver introduces a novel approach to source separation artifact reduction b
 - Modular architecture allows incremental improvements
 
 ### Novel Contributions
-- Phase-aware adaptation of ControlNet architecture
+- Phase-aware adaptation of LoRA-based architecture architecture
 - Frequency-dependent phase processing pipeline
 - Modular artifact-specific enhancement
 - Complex-domain spectrogram manipulation while preserving phase relationships
