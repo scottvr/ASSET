@@ -3,6 +3,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 from stemprover.core.config import SeparatorBackend
+from stemprover.core.types import ProcessingConfig
 
 @dataclass
 class SeparationProfile:
