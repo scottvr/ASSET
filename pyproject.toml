@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "stemprover"
@@ -29,5 +29,5 @@ dev = [
     "isort",
 ]
 
-[tool.setuptools.packages.find]
-where = ["stemprover"]
+[tool.hatch.build]
+packages = ["stemprover/src/stemprover"]
