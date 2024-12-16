@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 from stemprover.core.config import SeparatorBackend
 from stemprover.core.types import ProcessingConfig
 from stemprover.core.audio import AudioSegment
