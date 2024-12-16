@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 from stemprover.core.config import SeparatorBackend
 from stemprover.core.types import ProcessingConfig
+from stemprover.core.audio import AudioSegment
 
 @dataclass
 class SeparationProfile:
