@@ -13,7 +13,7 @@ from stemprover.core.types import (
 )
 
 # Separation components
-from .preparation.base import VocalSeparator
+from .separation.base import VocalSeparator
 from .separation.spleeter import SpleeterSeparator
 
 # Analysis components
