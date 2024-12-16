@@ -4,19 +4,19 @@ import matplotlib.pyplot as plt
 from typing import Dict
 from datetime import datetime
 
-from ...common.types import (
+from ..common.types import (
     AudioArray, SpectrogramArray, FrequencyBands,
     DEFAULT_FREQUENCY_BANDS
 )
-from ...common.audio_utils import (
+from ..common.audio_utils import (
     create_spectrogram, get_frequency_bins, get_band_mask
 )
-from ...common.math_utils import (
+from ..common.math_utils import (
     magnitude, angle, phase_difference, phase_coherence,
     rms, db_scale
 )
-from ...core.audio import AudioSegment
-from ...core.types import ProcessingConfig
+from ..core.audio import AudioSegment
+from ..core.types import ProcessingConfig
 
 class SpectralAnalyzer:
     """Spectral analysis and visualization with standardized types"""
