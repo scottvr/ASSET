@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Optional, Tuple
+from stemprover.core.config import SeparatorBackend
 
 @dataclass
 class SeparationProfile:
