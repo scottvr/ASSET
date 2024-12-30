@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, List, Tuple
 import numpy as np
+from stemprover.core.audio import AudioSegment
+from stemprover.core.types import (
+    ProcessingConfig,
+    SeparationResult
+)
 
 @dataclass
 class EnhancedSegmentMetrics:

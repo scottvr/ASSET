@@ -8,6 +8,11 @@ from stemprover.common.audio_utils import create_spectrogram, calculate_onset_va
 from stemprover.common.spectral_utils import calculate_band_energy
 from stemprover.core.types import ProcessingConfig
 from .metrics import SegmentMetrics
+from stemprover.core.audio import AudioSegment
+from stemprover.core.types import (
+    ProcessingConfig,
+    SeparationResult
+)
 
 class TestSegmentFinder:
     """Finds ideal segments for overfitting tests"""
