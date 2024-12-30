@@ -28,8 +28,8 @@ from .analysis.spectral import SpectralAnalyzer
 
 # Future diffusion components
 #from .diffusion.models import PhaseAwareLoRA
-from .enhancement\
-from .diffusion.training import PhaseAwareTrainer
+#from .diffusion.training import PhaseAwareTrainer
+from stemprover.enhancement.controlnet import PhaseAwareControlNet
 
 __all__ = [
     # Version
