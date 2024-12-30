@@ -7,7 +7,7 @@ from stemprover.common.types import AudioArray, SpectrogramArray
 from stemprover.common.audio_utils import create_spectrogram, calculate_onset_variation
 from stemprover.common.spectral_utils import calculate_band_energy
 from stemprover.core.types import ProcessingConfig
-from .metrics import SegmentMetrics
+from .metrics import EnhancedSegmentMetrics
 from stemprover.core.audio import AudioSegment
 from stemprover.core.types import (
     ProcessingConfig,
