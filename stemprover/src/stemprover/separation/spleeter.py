@@ -11,15 +11,24 @@ from ..core.types import SeparationResult
 from ..io.audio import load_audio_file, save_audio_file
 from ..analysis.spectral import SpectralAnalyzer
 
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Optional, Tuple, Union
+
+@dataclass
+class SeparationResult:
+    """Results from stem separation"""
+    separated_vocal: AudioSegment
+    separated_accompaniment: AudioSegment
+    mixed: Optional[AudioSegment] = None
+    file_paths: Optional[Dict[str, Path]] = None
+
+
 class SpleeterSeparator(VocalSeparator):
     """Concrete implementation using Spleeter"""
     
     def __init__(self, output_dir: str = "output"):
         super().__init__(output_dir)
-        
-        # Initialize components
-        self.analyzer = SpectralAnalyzer(self.output_dir)
-        
         # Defer TensorFlow setup until needed
         self.separator = None
         self.graph = None
@@ -41,6 +50,54 @@ class SpleeterSeparator(VocalSeparator):
         
         # Initialize Spleeter only after graph/session setup
         self.separator = SpleeterBase('spleeter:2stems')
+
+    def separate(self, mixed: AudioSegment) -> SeparationResult:
+        """Separate vocals and accompaniment from mixed audio"""
+        self._setup_tensorflow()
+        waveform = mixed.to_mono().audio.reshape(-1, 1)
+        
+        # Spleeter returns both vocals and accompaniment
+        predictions = self.separator.separate(waveform)
+        
+        separated_vocal = AudioSegment(
+            audio=predictions['vocals'].T,  # Convert back to our format
+            sample_rate=mixed.sample_rate
+        )
+        
+        separated_accompaniment = AudioSegment(
+            audio=predictions['accompaniment'].T,
+            sample_rate=mixed.sample_rate
+        )
+        
+        return SeparationResult(
+            separated_vocal=separated_vocal,
+            separated_accompaniment=separated_accompaniment,
+            mixed=mixed
+        )
+
+    def _save_audio_files(
+        self,
+        separated: AudioSegment,
+        mixed: AudioSegment,
+        start_time: float
+    ) -> Dict[str, Path]:
+        """Save separated and mixed audio"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_dir = self.output_dir / f"separation_{timestamp}"
+        save_dir.mkdir(exist_ok=True)
+
+        files = {}
+        segments = {
+            'mix': mixed,
+            'separated_vocal': separated
+        }
+
+        for name, segment in segments.items():
+            path = save_dir / f"{name}_from_{start_time:.1f}s.wav"
+            save_audio_file(segment, path)
+            files[name] = path
+
+        return files
 
     def separate_and_analyze(self,
                            vocal_paths: Tuple[str, str],
@@ -106,7 +163,9 @@ class SpleeterSeparator(VocalSeparator):
         # Extract segment
         start_sample = int(start_time * 44100)
         duration_samples = int(duration * 44100)
-        
+
+        print(f'DBG: start_sample: {start_sample}, duration_samples: {duration_samples}, min_length: {min_length}') 
+
         if start_sample + duration_samples > min_length:
             print(f"Warning: Requested duration extends beyond audio length. Truncating.")
             duration_samples = min_length - start_sample
@@ -164,33 +223,51 @@ class SpleeterSeparator(VocalSeparator):
             duration=mixed.duration
         )
 
-    def _save_audio_files(self, vocals: AudioSegment, accompaniment: AudioSegment,
-                         mixed: AudioSegment, separated: AudioSegment,
-                         start_time: float) -> Dict[str, Path]:
-        """Save all audio files"""
+    def _save_audio_files(
+        self,
+        separation_result: SeparationResult,
+        start_time: float
+    ) -> Dict[str, Path]:
+        """Save all separated audio files"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_dir = self.output_dir / f"separation_{timestamp}"
         save_dir.mkdir(exist_ok=True)
 
         files = {}
-        
-        # Prepare audio segments for saving
         segments = {
-            'clean_vocal': vocals,
-            'accompaniment': accompaniment,
-            'mix': mixed,
-            'separated_vocal': separated
+            'separated_vocal': separation_result.separated_vocal,
+            'separated_accompaniment': separation_result.separated_accompaniment
         }
+        
+        if separation_result.mixed is not None:
+            segments['mix'] = separation_result.mixed
 
         for name, segment in segments.items():
             path = save_dir / f"{name}_from_{start_time:.1f}s.wav"
-            print(f"\nProcessing {name}:")
-            print(f"Original shape: {segment.audio.shape}")
-            
             save_audio_file(segment, path)
             files[name] = path
 
         return files
+
+    def separate_file(
+        self,
+        mixed_path: Union[str, Tuple[str, str]],
+        start_time: float = 0.0,
+        duration: float = 30.0,
+        save_files: bool = True
+    ) -> SeparationResult:
+        """Separate vocals from audio file(s)"""
+        if isinstance(mixed_path, tuple):
+            mixed = self._load_stereo_pair(*mixed_path, start_time, duration)
+        else:
+            mixed = self._load_mono(mixed_path, start_time, duration)
+
+        result = self.separate(mixed)
+        
+        if save_files:
+            result.file_paths = self._save_audio_files(result, start_time)
+            
+        return result
 
     def cleanup(self):
         """Cleanup resources"""
