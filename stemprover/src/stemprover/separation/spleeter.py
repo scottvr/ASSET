@@ -143,6 +143,22 @@ class SpleeterSeparator(VocalSeparator):
 
         return result
 
+    def _load_mono(self, mono_path: str, start_time: float, duration: float) -> AudioSegment:
+        mono, sr = load_audio_file(mono_path, sr=44100, mono=True)
+
+        # Extract segment
+        start_sample = int(start_time * 44100)
+        duration_samples = int(duration * 44100)
+
+        mono_segment = mono[start_sample:start_sample + duration_samples]
+
+        return AudioSegment(
+            audio=mono,
+            sample_rate=44100,
+            start_time=start_time,
+            duration=duration_samples/44100
+        )
+
     def _load_stereo_pair(self, left_path: str, right_path: str, 
                          start_time: float, duration: float) -> AudioSegment:
         """Load and process stereo pair"""
