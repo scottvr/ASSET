@@ -8,7 +8,7 @@ from stemprover.core.types import (
 )
 
 @dataclass
-class EnhancedSegmentMetrics:
+class SegmentMetrics:
     """Enhanced metrics including SDR for research comparability"""
     # Standard SDR metric used in research
     sdr: float              # Signal-to-distortion ratio
@@ -69,13 +69,13 @@ class MetricsCalculator:
         target: np.ndarray,
         estimated: np.ndarray,
         genre: Optional[str] = None
-    ) -> EnhancedSegmentMetrics:
+    ) -> SegmentMetrics:
         """Calculate comprehensive metrics"""
         # Calculate standard SDR
-        sdr = EnhancedSegmentMetrics.calculate_sdr(target, estimated)
+        sdr = SegmentMetrics.calculate_sdr(target, estimated)
         
         # Calculate band-specific SDRs
-        band_sdrs = EnhancedSegmentMetrics.calculate_band_sdrs(
+        band_sdrs = SegmentMetrics.calculate_band_sdrs(
             target, estimated,
             self.config.frequency_bands,
             self.config.sample_rate
@@ -89,7 +89,7 @@ class MetricsCalculator:
         transition_score = self._calculate_transition_score(estimated)
         
         # Create metrics object
-        metrics = EnhancedSegmentMetrics(
+        metrics = SegmentMetrics(
             sdr=sdr,
             vocal_clarity=vocal_clarity,
             high_freq_content=high_freq_content,
@@ -107,7 +107,7 @@ class MetricsCalculator:
     
     def _calculate_detailed_score(
         self,
-        metrics: EnhancedSegmentMetrics,
+        metrics: SegmentMetrics,
         genre: Optional[str] = None
     ) -> float:
         """Calculate detailed score with optional genre weighting"""
