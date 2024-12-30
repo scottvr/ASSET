@@ -153,7 +153,7 @@ class SpleeterSeparator(VocalSeparator):
         mono_segment = mono[start_sample:start_sample + duration_samples]
 
         return AudioSegment(
-            audio=mono,
+            audio=mono_segment,
             sample_rate=44100,
             start_time=start_time,
             duration=duration_samples/44100
