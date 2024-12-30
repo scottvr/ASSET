@@ -162,7 +162,7 @@ class SpleeterSeparator(VocalSeparator):
 
         # Extract segment
         start_sample = int(start_time * 44100)
-        duration_samples = int(duration * 44100)
+        duration_samples = int(min_length)
 
         print(f'DBG: start_sample: {start_sample}, duration_samples: {duration_samples}, min_length: {min_length}') 
 
