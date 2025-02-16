@@ -16,8 +16,8 @@ I appreciate your interest and when this repo is usable, I will have detailed in
   Featuring StemProver - the Stem Improver
  </summary>
  
-<details>
-    <summary open> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. 
+<details open>
+    <summary> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. 
     </summary>
 
 # StemProver: Phase-Aware Audio Artifact Reduction via Controlled Latent Diffusion
