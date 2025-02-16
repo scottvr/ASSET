@@ -17,7 +17,7 @@ I appreciate your interest and when this repo is usable, I will have detailed in
  </summary>
  
 <details>
-    <summary> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. [Click to expand]
+    <summary open> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. 
     </summary>
 
 # StemProver: Phase-Aware Audio Artifact Reduction via Controlled Latent Diffusion
@@ -107,8 +107,9 @@ _A technical deep-dive into the architecture and implementation details is avail
 
 or
 
-<details open>
-    <summary> for everyone else! </summary>
+<details>
+    <summary> for everyone else!
+    (This version of the README was written nearly entirely by am LLM as a space-filler. Apologies for the marketing-speak.)</summary>
 
 # StemProver: Making Music Clearer Through AI Innovation
 
