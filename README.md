@@ -1,5 +1,8 @@
 # [ASSET] Audio Separation Stemfile Enhancement Toolkit
 
+Featuring StemProver - the Stem Improver.
+
+
 # Important!
 current status
 
@@ -11,10 +14,9 @@ there is still quite a bit of code that is local to my machine only, including t
 I appreciate your interest and when this repo is usable, I will have detailed installation and usage instructions documented. Unfortunately, that time is not now. 
 
 # Coming Soon
-<details open>
- <summary>
-  Featuring StemProver - the Stem Improver
- </summary>
+
+
+
  
 <details open>
     <summary> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. 
