@@ -120,6 +120,14 @@
 
 ## Implementation Notes
 
+### essential training flow
+![basic diagram](https://github.com/scottvr/ASSET/blob/main/docs/stemprover-training_diagram-0.2.1.png)
+
+### detailed training diagram
+at least, this is the plan as of now.
+
+![detailed training diagram](https://github.com/scottvr/ASSET/blob/main/docs/stemprover-training_diagram-2025-01-04-194124.png) (at least, this is the plan as of now.)
+
 ### Critical Considerations
 1. Balance between phase awareness and artifact reduction
 2. Efficient training pipeline for large datasets
