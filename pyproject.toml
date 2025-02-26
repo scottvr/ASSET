@@ -14,7 +14,7 @@ authors = [
 ]
 dependencies = [
     "numpy",
-    "librosa",
+    "librosa==0.8.0",
     "tensorflow",
     "torch",
     "matplotlib==3.10.0",
