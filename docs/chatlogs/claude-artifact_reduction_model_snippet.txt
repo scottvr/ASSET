@@ -1,0 +1,31 @@
+...
+
+scottvr:
+my concern is how if stable diffusion used (for ex) 50 timesteps of gaussian noise in their training process, I fear there may not be any direct analogy to 50 increasing (or decreasing) levels of coherent artifacts we are capable of generating for one pair of stems. Can you allay this fear?
+
+Claude:
+Your concern is valid. Directly mapping diffusion timesteps to artifact levels may not be feasible. However, we can still take inspiration from the diffusion process:
+
+Define a schedule of increasing artifact intensity, even if not 50 distinct levels
+Vary artifact types (e.g., frequency bands affected) in addition to intensity
+Combine artifacts from different separation parameter settings for more variety
+Use a perceptual loss to guide artifact generation towards realistic results
+While not a perfect analogy, careful design of the artifact generation process can yield a useful training signal for the model. Experimentation and validation will be key to refining this approach.
+
+
+
+
+scottvr:
+oh right.. there exist now SD LoRAs that enable LCM Samplers that work in as few as six steps. I suppose we would be leveraging a sinilar capability
+
+Claude:
+Absolutely. Even with a reduced number of steps, we can still create a useful training signal by carefully designing the artifact generation process. This could involve varying artifact types and intensities, combining artifacts from different separation parameters, and using perceptual losses to guide the generation towards realistic results. While not a perfect analogy to diffusion models, this approach can still yield effective training data for our artifact reduction model.
+
+
+
+
+scottvr:
+oh right and you know what I just reslized, was the entire reason for bringing controlNet into the mix was that ai implemented the circlefiller from their whitepaper and its entire training was based on essentially before after image pairs. i inow our use case is a bit different goal than "control", but i liked the zeo convolutions and simple training method and thoufht it was worth a shot.
+
+Claude:
+You're right, ControlNet's training approach based on before/after image pairs seems well-suited for our artifact reduction use case. While not an exact match, leveraging the zero convolutions and pairwise training method is a promising avenue to explore. We can adapt it to focus on mapping artifacted/clean audio pairs rather than control/output image pairs. Experimentation will be key to validating its effectiveness for our specific goals.

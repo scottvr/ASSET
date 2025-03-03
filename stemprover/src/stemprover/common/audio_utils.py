@@ -22,7 +22,7 @@ def get_band_mask(freq_bins: np.ndarray, low_freq: float, high_freq: float) -> n
     """Get boolean mask for frequency band"""
     return (freq_bins >= low_freq) & (freq_bins <= high_freq)
 
-def calculate_dynamic_range(self, audio: AudioArray) -> float:
+def calculate_dynamic_range(audio: AudioArray) -> float:
     """Calculate dynamic range in dB"""
     # Use RMS with small windows
     frame_length = 2048
@@ -37,8 +37,7 @@ def calculate_dynamic_range(self, audio: AudioArray) -> float:
     db_range = librosa.amplitude_to_db(rms.max()) - librosa.amplitude_to_db(rms.min())
     return float(db_range)
     
-def calculate_phase_complexity(self,
-                              vocal_spec: SpectrogramArray,
+def calculate_phase_complexity(vocal_spec: SpectrogramArray,
                               mix_spec: SpectrogramArray) -> float:
     """Measure complexity of phase relationships"""
     vocal_phase = np.angle(vocal_spec)

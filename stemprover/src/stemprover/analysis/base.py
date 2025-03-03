@@ -16,7 +16,6 @@ class VocalAnalyzer(ABC):
         pass
 
     @abstractmethod
-    def _create_spectrograms(self, clean: np.ndarray, separated: np.ndarray, 
-                          sr: int, output_path: Path):
-        """Create and save spectrogram comparisons"""
+    def create_phase_spectrogram(self, audio: np.ndarray, sr: int):
+        """Create spectrogram with phase preservation for analysis"""
         pass

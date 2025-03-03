@@ -37,8 +37,8 @@ class SpectralAnalyzer:
         analysis_dir = self.output_dir / f"analysis_{timestamp}"
         analysis_dir.mkdir(exist_ok=True)
         
-        clean_spec = self._create_spectrogram(clean.audio, clean.sample_rate)
-        sep_spec = self._create_spectrogram(separated.audio, separated.sample_rate)
+        clean_spec = self.create_phase_spectrogram(clean.audio, clean.sample_rate)
+        sep_spec = self.create_phase_spectrogram(separated.audio, separated.sample_rate)
         
         self._save_comparison(
             clean_spec, 
@@ -51,8 +51,8 @@ class SpectralAnalyzer:
         
         return analysis_dir
 
-    def _create_spectrogram(self, audio: AudioArray, sr: int) -> SpectrogramArray:
-        """Create spectrogram with phase preservation"""
+    def create_phase_spectrogram(self, audio: AudioArray, sr: int) -> SpectrogramArray:
+        """Create spectrogram with phase preservation for analysis"""
         return create_spectrogram(
             audio,
             n_fft=self.config.n_fft,

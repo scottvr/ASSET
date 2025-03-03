@@ -11,8 +11,8 @@ from abc import ABC, abstractmethod
 class VocalSeparator(ABC):
     """Abstract base class for vocal separators"""
     
-    def __init__(self, output_dir: str = "output"):
-        self.output_dir = Path(output_dir)
+    def __init__(self, output_dir: Path = Path("output")):
+        self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     @abstractmethod
@@ -86,7 +86,7 @@ class StemProcessor:
         
         # Initialize enhancement components
         self.artifact_processor = IntegratedHighFrequencyProcessor(
-            "enhancement_output",
+            Path("enhancement_output"),
             config=profile.artifact_reduction_config or ProcessingConfig()
         ) if profile.use_high_freq_processor else None
         

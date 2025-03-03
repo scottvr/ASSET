@@ -1,0 +1,93 @@
+{
+  "name": "vocal_instrumental_separation",
+  "description": "Test case designed to create realistic vocal/instrumental separation scenario",
+  "duration": 5.0,
+  "sample_rate": 44100,
+  "output_dir": "mpd_spleeter_test",
+  "waveforms": [
+    {
+      "waveform_type": "sine",
+      "frequency": 431.0,
+      "amplitude": 0.7,
+      "phase_offset": 0.0,
+      "start_time": 0.1,
+      "duration": 4.8,
+      "channel": "center",
+      "vibrato_rate": 5.5,
+      "vibrato_depth": 4.0,
+      "tremolo_rate": 7.2,
+      "tremolo_depth": 0.15,
+      "envelope": {
+        "attack": 0.05,
+        "decay": 0.1,
+        "sustain": 0.8,
+        "release": 0.5
+      },
+      "reverb": {
+        "amount": 0.2,
+        "decay": 1.2,
+        "damping": 0.6
+      }
+    },
+    {
+      "waveform_type": "square",
+      "frequency": 223.0,
+      "amplitude": 0.5,
+      "phase_offset": 0.0,
+      "start_time": 0.0,
+      "duration": 5.0,
+      "channel": "-0.7",
+      "envelope": {
+        "attack": 0.01,
+        "decay": 0.05,
+        "sustain": 0.9,
+        "release": 0.3
+      },
+      "reverb": {
+        "amount": 0.3,
+        "decay": 1.5,
+        "damping": 0.4
+      }
+    },
+    {
+      "waveform_type": "sawtooth",
+      "frequency": 293.0,
+      "amplitude": 0.4,
+      "phase_offset": 0.0,
+      "start_time": 0.25,
+      "duration": 4.5,
+      "channel": "0.7",
+      "envelope": {
+        "attack": 0.02,
+        "decay": 0.07,
+        "sustain": 0.85,
+        "release": 0.4
+      },
+      "reverb": {
+        "amount": 0.3,
+        "decay": 1.5,
+        "damping": 0.4
+      }
+    }
+  ],
+  "variations": [
+    {
+      "modifications": {
+        "sine": {
+          "phase_offset": 0.7853981633974483
+        }
+      }
+    },
+    {
+      "modifications": {
+        "square": {
+          "phase_offset": 1.0471975511965976,
+          "amplitude": 0.6
+        },
+        "sawtooth": {
+          "amplitude": 0.3
+        }
+      }
+    }
+  ]
+}
