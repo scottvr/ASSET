@@ -46,8 +46,23 @@ except ImportError:
         return float(np.mean(np.cos(phase_diff)))
     
     def phase_difference(spec1: np.ndarray, spec2: np.ndarray) -> np.ndarray:
+        # Handle different sized inputs by padding the shorter one
+        if not np.iscomplexobj(spec1) and not np.iscomplexobj(spec2):
+            # Both are time-domain signals - pad to match length
+            if len(spec1) > len(spec2):
+                spec2 = np.pad(spec2, (0, len(spec1) - len(spec2)))
+            elif len(spec2) > len(spec1):
+                spec1 = np.pad(spec1, (0, len(spec2) - len(spec1)))
+        
         phase1 = np.angle(spec1) if np.iscomplexobj(spec1) else np.angle(np.fft.rfft(spec1))
         phase2 = np.angle(spec2) if np.iscomplexobj(spec2) else np.angle(np.fft.rfft(spec2))
+        
+        # If we still have a size mismatch after FFT (rare but possible with complex inputs)
+        if phase1.shape != phase2.shape:
+            min_size = min(len(phase1), len(phase2))
+            phase1 = phase1[:min_size]
+            phase2 = phase2[:min_size]
+            
         return np.abs(phase1 - phase2)
     
     class SpectralAnalyzer:
@@ -56,7 +71,11 @@ except ImportError:
             self.config = config
         
         def create_phase_spectrogram(self, audio, sample_rate):
-            return np.fft.rfft(audio[0] if audio.ndim > 1 else audio)
+            # Extract channel data and ensure 1D
+            audio_data = audio[0] if audio.ndim > 1 else audio
+            if audio_data.ndim > 1:
+                audio_data = audio_data.flatten()
+            return np.fft.rfft(audio_data)
             
     # Minimal implementations for ArtifactType and ArtifactParameters
     class ArtifactType(Enum):
@@ -161,6 +180,7 @@ class TestCaseConfig:
     output_dir: str = "output"
     enable_phase_analysis: bool = True
     enable_spectral_analysis: bool = True
+    auto_pad_to_max: bool = True  # Auto-pad waveforms to ensure consistent lengths
 
 class EnhancedWaveformGenerator:
     """Generate test signals based on JSON configuration"""
@@ -174,6 +194,13 @@ class EnhancedWaveformGenerator:
     def generate_from_config(self, test_config: TestCaseConfig) -> Dict[str, AudioSegment]:
         """Generate all audio files for a test case"""
         results = {}
+        
+        # Auto-pad waveforms to ensure consistent lengths if requested
+        if getattr(test_config, 'auto_pad_to_max', False):
+            max_duration = max(wave_config.duration + wave_config.start_time 
+                            for wave_config in test_config.waveforms)
+            for wave_config in test_config.waveforms:
+                wave_config.duration = max_duration - wave_config.start_time
         
         # Generate base stems
         stems = {}
@@ -511,12 +538,12 @@ def validate_test_case(
                                 )
                             )
                         else:
-                            # Fallback to simpler phase analysis
+                            # Fallback to simpler phase analysis with padding to handle different-length inputs
+                            clean_audio = clean_mix.audio.flatten() if clean_mix.audio.ndim > 0 else clean_mix.audio
+                            stem_audio = audio.audio.flatten() if audio.audio.ndim > 0 else audio.audio
+                            
                             coh = phase_coherence(
-                                phase_difference(
-                                    clean_mix.audio.flatten(),
-                                    audio.audio.flatten()
-                                )
+                                phase_difference(clean_audio, stem_audio)
                             )
                         
                         results["clean_phase_coherence"][name] = coh
@@ -538,11 +565,12 @@ def validate_test_case(
                         )
                     )
                 else:
+                    # Consistent handling of potentially different-length inputs
+                    artifact_audio = artifact_mix.audio.flatten() if artifact_mix.audio.ndim > 0 else artifact_mix.audio
+                    clean_audio = clean_mix.audio.flatten() if clean_mix.audio.ndim > 0 else clean_mix.audio
+                    
                     artifact_coh = phase_coherence(
-                        phase_difference(
-                            artifact_mix.audio.flatten(),
-                            clean_mix.audio.flatten()
-                        )
+                        phase_difference(artifact_audio, clean_audio)
                     )
                 
                 results["artifact_phase_coherence"] = artifact_coh

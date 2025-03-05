@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import librosa
 import librosa.display
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 from pathlib import Path
 import json
 import seaborn as sns
@@ -953,3 +953,66 @@ class ArtifactVisualizer:
                transform=ax.transAxes, 
                verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+
+def create_consistent_spectrograms(
+    audio_segments: Dict[str, Union[AudioSegment, np.ndarray]],
+    config: ProcessingConfig,
+    normalize_lengths: bool = True,
+    return_complex: bool = False
+) -> Dict[str, np.ndarray]:
+    """
+    Generate spectrograms with consistent dimensions from multiple audio segments.
+    
+    This function ensures all spectrograms have the same dimensions by optionally padding
+    shorter audio segments with silence. This is especially useful for comparing
+    spectrograms of different audio files or for phase analysis.
+    
+    Args:
+        audio_segments: Dictionary of named AudioSegment objects or numpy arrays
+        config: ProcessingConfig containing FFT parameters
+        normalize_lengths: If True, pad shorter segments to match the longest
+        return_complex: If True, return complex spectrograms, otherwise return magnitude
+        
+    Returns:
+        Dictionary of spectrograms with consistent dimensions
+    """
+    # Find the longest audio for consistent time axis
+    max_length = 0
+    if normalize_lengths:
+        for name, audio in audio_segments.items():
+            if isinstance(audio, AudioSegment):
+                length = audio.audio.shape[1] if audio.audio.ndim > 1 else len(audio.audio)
+            else:
+                length = audio.shape[1] if audio.ndim > 1 else len(audio)
+            max_length = max(max_length, length)
+    
+    # Create spectrograms with consistent dimensions
+    spectrograms = {}
+    for name, audio in audio_segments.items():
+        # Extract audio data based on input type
+        if isinstance(audio, AudioSegment):
+            audio_data = audio.audio[0] if audio.audio.ndim > 1 and audio.audio.shape[0] > 1 else audio.audio.flatten()
+            sample_rate = audio.sample_rate
+        else:
+            audio_data = audio[0] if audio.ndim > 1 and audio.shape[0] > 1 else audio.flatten()
+            sample_rate = config.sample_rate
+        
+        # Pad if needed for consistent time axis
+        if normalize_lengths and len(audio_data) < max_length:
+            audio_data = np.pad(audio_data, (0, max_length - len(audio_data)))
+        
+        # Create spectrogram with consistent parameters
+        stft = librosa.stft(
+            audio_data, 
+            n_fft=config.n_fft, 
+            hop_length=config.hop_length
+        )
+        
+        # Return either complex or magnitude spectrogram
+        if return_complex:
+            spectrograms[name] = stft
+        else:
+            spectrograms[name] = np.abs(stft)
+    
+    return spectrograms
