@@ -31,13 +31,13 @@ sys.path.insert(0, str(project_root))
 # Import stemprover components
 from stemprover.core.audio import AudioSegment
 from stemprover.core.config import ProcessingConfig
-from stemprover.src.stemprover.analysis.artifacts.base import (
+from stemprover.analysis.artifacts.base import (
     ArtifactType, ArtifactParameters, ArtifactGenerator
 )
-from stemprover.src.stemprover.analysis.artifacts.detector import (
+from stemprover.analysis.artifacts.detector import (
     ArtifactDetector, ArtifactDetectionResult
 )
-from stemprover.src.stemprover.analysis.artifacts.visualization import (
+from stemprover.analysis.artifacts.visualization import (
     ArtifactVisualizer, ArtifactVisualizationConfig
 )
 
