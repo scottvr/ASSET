@@ -24,15 +24,15 @@ The goal of this phase is to clean up the existing code, establish a stable data
 
 [x] Commit this small dataset to your repository (or a designated storage location) so it can be used for automated testing.
 
-[ ] Establish a Reproducible Environment:
+[x] Establish a Reproducible Environment:
 
-[ ] Review and finalize the dependencies in pyproject.toml.
+[x] Review and finalize the dependencies in pyproject.toml.
 
-[ ] Create a fresh virtual environment.
+[x] Create a fresh virtual environment.
 
-[ ] Install dependencies only from the pyproject.toml file.
+[x] Install dependencies only from the pyproject.toml file.
 
-[ ] Confirm the environment is correct by successfully running the "Golden Dataset" generation script.
+[x] Confirm the environment is correct by successfully running the "Golden Dataset" generation script.
 
 Phase 2: Build and Validate the Core Pipeline
 This phase focuses on making your data processing and analysis workflow functional from end to end, proving that data can flow through the system as intended.
