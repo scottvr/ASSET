@@ -86,6 +86,7 @@ class TestCaseConfig:
     duration: float = 5.0
     sample_rate: int = 44100
     output_dir: str = "output"
+    auto_pad_to_max: bool = False
 
 class EnhancedWaveformGenerator:
     """Generate test signals based on JSON configuration"""
@@ -98,10 +99,10 @@ class EnhancedWaveformGenerator:
         """Generate all audio files for a test case"""
         results = {}
         
-        if config.get('auto_pad_to_max', False):
+        if test_config.auto_pad_to_max:
             max_duration = max(wave_config.duration + wave_config.start_time 
-                      for wave_config in config.waveforms)
-            for wave_config in config.waveforms:
+                      for wave_config in test_config.waveforms)
+            for wave_config in test_config.waveforms:
                 wave_config.duration = max_duration - wave_config.start_time
 
         # Generate base stems
