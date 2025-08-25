@@ -108,16 +108,30 @@ from pathlib import Path
 from datetime import datetime
 import json
 import numpy as np
+from dataclasses import dataclass, asdict
 
-from stemprover import SpleeterSeparator, SpectralAnalyzer,  ProcessingConfig
-from stemprover.analysis.selection.segment_finder import find_best_segments
-from stemprover.common.types import DEFAULT_FREQUENCY_BANDS
+from stemprover import SpleeterSeparator, SpectralAnalyzer, ProcessingConfig
+from stemprover.analysis.selection.segment_finder import find_best_segments, FoundSegment
+from stemprover.types import DEFAULT_FREQUENCY_BANDS
+from stemprover.core.audio import AudioSegment
+from stemprover.io.audio import load_audio_file
+
+@dataclass
+class TimeRange:
+    start: float
+    end: float
+
+@dataclass
+class SegmentAnalysis:
+    time_range: TimeRange
+    metrics: FoundSegment
+    spectral_analysis: dict
 
 def run_enhanced_battery_test(
-    vocal_left: str,
-    vocal_right: str,
-    accompaniment_left: str,
-    accompaniment_right: str,
+    vocal_left_path: Path,
+    vocal_right_path: Path,
+    accompaniment_left_path: Path,
+    accompaniment_right_path: Path,
     output_base: str = "enhanced_battery_test",
     full_duration: float = 90.0,  # Full song duration
     vocal_start: float = 30.0,    # Where vocals begin
@@ -147,11 +161,21 @@ def run_enhanced_battery_test(
     )
 
     try:
+        # Load audio files into AudioSegment objects
+        vocal_l, sr = load_audio_file(vocal_left_path, mono=True)
+        vocal_r, _ = load_audio_file(vocal_right_path, mono=True)
+        acc_l, _ = load_audio_file(accompaniment_left_path, mono=True)
+        acc_r, _ = load_audio_file(accompaniment_right_path, mono=True)
+
+        # Create stereo AudioSegments
+        vocal_segment = AudioSegment(np.array([vocal_l, vocal_r]), sr)
+        accompaniment_segment = AudioSegment(np.array([acc_l, acc_r]), sr)
+
         # First pass: separate and analyze full track
         print("\nProcessing full stems...")
         separation_result = separator.separate_and_analyze(
-            vocal_paths=(vocal_left, vocal_right),
-            accompaniment_paths=(accompaniment_left, accompaniment_right),
+            vocal_paths=(vocal_left_path, vocal_right_path),
+            accompaniment_paths=(accompaniment_left_path, accompaniment_right_path),
             start_time=0.0,
             duration=full_duration,
             run_analysis=True
@@ -159,12 +183,14 @@ def run_enhanced_battery_test(
 
         # Find best segments within the vocal portion
         print("\nAnalyzing segments...")
-        vocal_samples = int(vocal_start * config.sample_rate)
+        vocal_track_for_segment_finding = separation_result.clean_vocal.slice(vocal_start, full_duration)
+        backing_track_for_segment_finding = separation_result.separated_vocal.slice(vocal_start, full_duration)
+
         best_segments = find_best_segments(
-            vocal_track=separation_result.clean_vocal.audio[:, vocal_samples:],
-            backing_track=separation_result.separated_vocal.audio[:, vocal_samples:],
-            segment_length=int(segment_length * config.sample_rate),
-            hop_length=int(segment_hop * config.sample_rate),
+            vocal_track=vocal_track_for_segment_finding,
+            backing_track=backing_track_for_segment_finding,
+            segment_length_sec=segment_length,
+            hop_length_sec=segment_hop,
             config=config,
             top_k=top_k
         )
@@ -172,7 +198,7 @@ def run_enhanced_battery_test(
         # Analyze each best segment in detail
         segment_analyses = []
         for idx, seg in enumerate(best_segments):
-            start_time = vocal_start + seg['time']
+            start_time = vocal_start + seg.time
             end_time = start_time + segment_length
 
             print(f"\nAnalyzing segment {idx + 1}/{len(best_segments)}")
@@ -180,8 +206,8 @@ def run_enhanced_battery_test(
 
             # Extract and analyze segment
             segment_result = separator.separate_and_analyze(
-                vocal_paths=(vocal_left, vocal_right),
-                accompaniment_paths=(accompaniment_left, accompaniment_right),
+                vocal_paths=(vocal_left_path, vocal_right_path),
+                accompaniment_paths=(accompaniment_left_path, accompaniment_right_path),
                 start_time=start_time,
                 duration=segment_length,
                 run_analysis=True
@@ -196,14 +222,11 @@ def run_enhanced_battery_test(
             # Load and store analysis results
             with open(analysis_path / "analysis.json", 'r') as f:
                 analysis_data = json.load(f)
-                segment_analyses.append({
-                    'time_range': {
-                        'start': start_time,
-                        'end': end_time
-                    },
-                    'metrics': seg['metrics'].__dict__,
-                    'spectral_analysis': analysis_data
-                })
+                segment_analyses.append(SegmentAnalysis(
+                    time_range=TimeRange(start=start_time, end=end_time),
+                    metrics=seg,
+                    spectral_analysis=analysis_data
+                ))
 
         # Save consolidated results
         results_path = output_dir / "segment_analysis.json"
@@ -215,7 +238,7 @@ def run_enhanced_battery_test(
                     'segment_hop': segment_hop,
                     'top_k': top_k
                 },
-                'segments': segment_analyses
+                'segments': [asdict(s) for s in segment_analyses]
             }, f, indent=2)
 
         print(f"\nProcessing complete!")
