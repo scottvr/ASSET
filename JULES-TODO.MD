@@ -4,11 +4,11 @@ ASSET/StemProver: Project Realization Checklist
 Phase 1: Solidify the Foundation (Code & Data)
 The goal of this phase is to clean up the existing code, establish a stable data pipeline, and ensure everything is consistent and reproducible before building on top of it.
 
-[ ] Consolidate Utilities:
+[x] Consolidate Utilities:
 
-[ ] Create a central stemprover.utils module.
+[x] Create a central stemprover.utils module.
 
-[ ] Move shared functions (spectrogram generation, audio I/O, etc.) from common/, analysis/, and data_generation/ into the new utils module to reduce code duplication.
+[x] Move shared functions (spectrogram generation, audio I/O, etc.) from common/, analysis/, and data_generation/ into the new utils module to reduce code duplication.
 
 [ ] Standardize Data Structures:
 

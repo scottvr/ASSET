@@ -3,10 +3,9 @@ from typing import List, Dict, Tuple
 import numpy as np
 import librosa
 
-from stemprover.common.types import AudioArray, SpectrogramArray
-from stemprover.common.audio_utils import create_spectrogram, calculate_onset_variation
-from stemprover.common.spectral_utils import calculate_band_energy
-from stemprover.core.types import ProcessingConfig
+from ...types import AudioArray, SpectrogramArray
+from ...utils import create_spectrogram, calculate_onset_variation, calculate_band_energy
+from ...core.types import ProcessingConfig
 from .metrics import SegmentMetrics
 from stemprover.core.audio import AudioSegment
 from stemprover.core.types import (
