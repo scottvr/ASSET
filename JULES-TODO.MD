@@ -16,13 +16,13 @@ The goal of this phase is to clean up the existing code, establish a stable data
 
 [x] Refactor any scripts (battery_tests_20241209.py, BS-validator.py, etc.) that use raw dictionaries or tuples where these dataclasses should be used.
 
-[ ] Build a "Golden Dataset":
+[x] Build a "Golden Dataset":
 
-[ ] Use the waveform-generator-config_prime3.py script to generate a small, controlled set of test audio files from example-config.json.
+[x] Use the waveform-generator-config_prime3.py script to generate a small, controlled set of test audio files from example-config.json.
 
-[ ] This dataset should include a clean mix, all corresponding stems, and at least one variation.
+[x] This dataset should include a clean mix, all corresponding stems, and at least one variation.
 
-[ ] Commit this small dataset to your repository (or a designated storage location) so it can be used for automated testing.
+[x] Commit this small dataset to your repository (or a designated storage location) so it can be used for automated testing.
 
 [ ] Establish a Reproducible Environment:
 
