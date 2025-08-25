@@ -4,14 +4,12 @@ import matplotlib.pyplot as plt
 from typing import Dict, Optional
 from datetime import datetime
 
-from ..common.types import (
+from ..types import (
     AudioArray, SpectrogramArray, FrequencyBands,
     DEFAULT_FREQUENCY_BANDS
 )
-from ..common.audio_utils import (
-    create_spectrogram, get_frequency_bins, get_band_mask
-)
-from ..common.math_utils import (
+from ..utils import (
+    create_spectrogram, get_frequency_bins, get_band_mask,
     magnitude, angle, phase_difference, phase_coherence,
     rms, db_scale
 )
@@ -158,3 +156,68 @@ class SpectralAnalyzer:
         """Save analysis results as JSON"""
         with open(path, 'w') as f:
             json.dump(analysis, f, indent=2)
+
+    def analyze_frequency_distribution(self, audio_segment: AudioSegment, preserve_phase: bool = False) -> Dict:
+        """Analyzes the energy distribution across frequency bands for a single audio segment."""
+        if self.output_dir is None:
+            # Create a temporary directory if no output dir is specified
+            import tempfile
+            with tempfile.TemporaryDirectory() as tmpdir:
+                self.output_dir = Path(tmpdir)
+                return self._analyze_frequency_distribution(audio_segment, preserve_phase)
+        else:
+            return self._analyze_frequency_distribution(audio_segment, preserve_phase)
+
+    def _analyze_frequency_distribution(self, audio_segment: AudioSegment, preserve_phase: bool) -> Dict:
+        """Helper for frequency distribution analysis."""
+        import time
+        start_time = time.time()
+
+        spec = self.create_phase_spectrogram(audio_segment.audio, audio_segment.sample_rate)
+        freq_bins = get_frequency_bins(sr=audio_segment.sample_rate, n_fft=self.config.n_fft)
+
+        energy_dist = {}
+        total_energy = np.sum(np.abs(spec))
+
+        for band_name, (low_freq, high_freq) in self.frequency_bands.items():
+            band_mask = get_band_mask(freq_bins, low_freq, high_freq)
+            band_energy = np.sum(np.abs(spec[band_mask]))
+            energy_dist[band_name] = (band_energy / total_energy) * 100 if total_energy > 0 else 0
+
+        results = {
+            "energy_distribution": energy_dist,
+            "processing_time": time.time() - start_time
+        }
+
+        if preserve_phase:
+            # This is a placeholder for a more meaningful phase coherence calculation
+            # on a single spectrogram, which is not well-defined.
+            # We'll calculate coherence against a sine wave of the dominant frequency.
+            dominant_freq_idx = np.argmax(np.mean(np.abs(spec), axis=1))
+            dominant_freq = freq_bins[dominant_freq_idx]
+            t = np.arange(len(audio_segment.audio)) / audio_segment.sample_rate
+            sine_wave = np.sin(2 * np.pi * dominant_freq * t)
+            sine_spec = self.create_phase_spectrogram(sine_wave, audio_segment.sample_rate)
+            # Ensure specs have same shape
+            min_shape = min(spec.shape[1], sine_spec.shape[1])
+            phase_diff = phase_difference(spec[:,:min_shape], sine_spec[:,:min_shape])
+            results["phase_coherence"] = phase_coherence(phase_diff)
+
+        return results
+
+    def calculate_band_isolation(self, audio_segment: AudioSegment) -> float:
+        """
+        Calculates a score representing how well energy is isolated within the defined frequency bands.
+        A higher score means more energy is concentrated within the bands and less is spread between them.
+        """
+        spec = self.create_phase_spectrogram(audio_segment.audio, audio_segment.sample_rate)
+        freq_bins = get_frequency_bins(sr=audio_segment.sample_rate, n_fft=self.config.n_fft)
+
+        total_energy = np.sum(np.abs(spec))
+        energy_in_bands = 0
+
+        for band_name, (low_freq, high_freq) in self.frequency_bands.items():
+            band_mask = get_band_mask(freq_bins, low_freq, high_freq)
+            energy_in_bands += np.sum(np.abs(spec[band_mask]))
+
+        return energy_in_bands / total_energy if total_energy > 0 else 0

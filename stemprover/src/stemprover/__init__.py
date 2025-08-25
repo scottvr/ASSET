@@ -21,8 +21,8 @@ from .analysis.base import VocalAnalyzer
 from .analysis.spectral import SpectralAnalyzer
 #from .analysis.phase import PhaseAnalyzer
 # TODO: Implement PhaseAnalyzer using existing phase analysis infrastructure
-# - Consolidate phase-related functions from common/math_utils.py
-# - Incorporate phase complexity calculations from audio_utils.py
+# - Consolidate phase-related functions from the new utils.py
+# - Incorporate phase complexity calculations from the new utils.py
 # - Consider alpha-channel visualization integration
 # (Postponed until after band-split validation experiment)
 

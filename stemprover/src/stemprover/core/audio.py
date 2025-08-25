@@ -65,3 +65,20 @@ class AudioSegment:
         if self.is_stereo:
             return self.audio.shape[1] / self.sample_rate
         return len(self.audio) / self.sample_rate
+
+    def slice(self, start_sec: float, end_sec: float) -> 'AudioSegment':
+        """Return a new AudioSegment sliced to the given start and end times"""
+        start_sample = int(start_sec * self.sample_rate)
+        end_sample = int(end_sec * self.sample_rate)
+
+        if self.is_stereo:
+            sliced_audio = self.audio[:, start_sample:end_sample]
+        else:
+            sliced_audio = self.audio[start_sample:end_sample]
+
+        return AudioSegment(
+            audio=sliced_audio,
+            sample_rate=self.sample_rate,
+            start_time=self.start_time + start_sec,
+            duration=end_sec - start_sec
+        )

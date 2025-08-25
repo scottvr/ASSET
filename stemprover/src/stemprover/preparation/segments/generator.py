@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 
-from common.types import AudioArray
-from common.audio_utils import create_spectrogram
-from core.audio import AudioSegment
-from core.types import ProcessingConfig
+from ...types import AudioArray
+from ...utils import create_spectrogram
+from ...core.audio import AudioSegment
+from ...core.types import ProcessingConfig
 
 """
 Key features:
