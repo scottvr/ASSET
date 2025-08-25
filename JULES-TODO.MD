@@ -10,11 +10,11 @@ The goal of this phase is to clean up the existing code, establish a stable data
 
 [x] Move shared functions (spectrogram generation, audio I/O, etc.) from common/, analysis/, and data_generation/ into the new utils module to reduce code duplication.
 
-[ ] Standardize Data Structures:
+[x] Standardize Data Structures:
 
-[ ] Perform a full-project audit to ensure consistent use of the core dataclasses: ProcessingConfig, SeparationResult, and AudioSegment.
+[x] Perform a full-project audit to ensure consistent use of the core dataclasses: ProcessingConfig, SeparationResult, and AudioSegment.
 
-[ ] Refactor any scripts (battery_tests_20241209.py, BS-validator.py, etc.) that use raw dictionaries or tuples where these dataclasses should be used.
+[x] Refactor any scripts (battery_tests_20241209.py, BS-validator.py, etc.) that use raw dictionaries or tuples where these dataclasses should be used.
 
 [ ] Build a "Golden Dataset":
 
