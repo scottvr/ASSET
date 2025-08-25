@@ -1,5 +1,5 @@
-from ...common.types import AudioArray, SpectrogramArray, TensorType
-from ...common.audio_utils import create_spectrogram
+from ...types import AudioArray, SpectrogramArray, TensorType
+from ...utils import create_spectrogram
 
 from abc import ABC, abstractmethod
 import numpy as np
