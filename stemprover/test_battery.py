@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from stemprover import (ProcessingConfig, SpectralAnalyzer)
+from stemprover import (ProcessingConfig, SpectralAnalyzer, PhaseAnalyzer)
 from stemprover.analysis.selection.segment_finder import (FoundSegment,
                                                           find_best_segments)
 from stemprover.core.audio import AudioSegment
@@ -36,6 +36,7 @@ class SegmentAnalysis:
     time_range: TimeRange
     metrics: FoundSegment
     spectral_analysis: dict
+    phase_analysis: dict
 
 
 def run_battery_test(
@@ -62,6 +63,11 @@ def run_battery_test(
         output_dir / "analysis",
         config=config,
         frequency_bands=DEFAULT_FREQUENCY_BANDS
+    )
+    phase_analyzer = PhaseAnalyzer(
+        output_dir / "phase_analysis",
+        n_fft=config.n_fft,
+        hop_length=config.hop_length
     )
 
     separator = AsteroidSeparator(output_dir=str(output_dir / "separation"))
@@ -131,19 +137,29 @@ def run_battery_test(
         separated_slice = separated_vocal_segment.slice(start_time, end_time)
 
         # Perform spectral analysis on the slice
-        analysis_path = analyzer.analyze(
+        spectral_analysis_path = analyzer.analyze(
+            clean_slice,
+            separated_slice
+        )
+
+        # Perform phase analysis on the slice
+        phase_analysis_path = phase_analyzer.analyze(
             clean_slice,
             separated_slice
         )
 
         # Load and store analysis results
-        with open(analysis_path / "analysis.json", 'r') as f:
-            analysis_data = json.load(f)
-            segment_analyses.append(SegmentAnalysis(
-                time_range=TimeRange(start=start_time, end=end_time),
-                metrics=seg,
-                spectral_analysis=analysis_data
-            ))
+        with open(spectral_analysis_path / "analysis.json", 'r') as f:
+            spectral_data = json.load(f)
+        with open(phase_analysis_path, 'r') as f:
+            phase_data = json.load(f)
+
+        segment_analyses.append(SegmentAnalysis(
+            time_range=TimeRange(start=start_time, end=end_time),
+            metrics=seg,
+            spectral_analysis=spectral_data,
+            phase_analysis=phase_data
+        ))
 
     # 6. Save consolidated results
     results_path = output_dir / "segment_analysis.json"
