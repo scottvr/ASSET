@@ -43,13 +43,13 @@ This phase focuses on making your data processing and analysis workflow function
 
 [x] Debug the SpleeterSeparator and SpectralAnalyzer classes until the script runs from start to finish without errors, generating separation and analysis outputs.
 
-[ ] Implement the PhaseAnalyzer:
+[x] Implement the PhaseAnalyzer:
 
-[ ] Create a new file stemprover/analysis/phase.py.
+[x] Create a new file stemprover/analysis/phase.py.
 
-[ ] Define the PhaseAnalyzer class inside it, addressing the TODO in __init__.py.
+[x] Define the PhaseAnalyzer class inside it, addressing the TODO in __init__.py.
 
-[ ] Move phase-related functions like phase_coherence and phase_difference from common/math_utils.py into this new class as methods.
+[x] Move phase-related functions like phase_coherence and phase_difference from common/math_utils.py into this new class as methods.
 
 [ ] Conduct the Band-Split Validation:
 
