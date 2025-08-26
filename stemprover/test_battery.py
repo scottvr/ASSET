@@ -4,8 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-from stemprover import (ProcessingConfig, SpectralAnalyzer,
-                        SpleeterSeparator)
+from stemprover import (ProcessingConfig, SpectralAnalyzer)
 from stemprover.analysis.selection.segment_finder import (FoundSegment,
                                                           find_best_segments)
 from stemprover.core.audio import AudioSegment
@@ -29,6 +28,7 @@ class SegmentAnalysis:
 def run_battery_test(
     mix_path: Path,
     target_stem_path: Path,
+    separated_vocal_path: Path,
     output_dir: Path,
     segment_length: float = 5.0,
     segment_hop: float = 2.5,
@@ -46,7 +46,6 @@ def run_battery_test(
         hop_length=512
     )
 
-    separator = SpleeterSeparator(str(output_dir / "separation"))
     analyzer = SpectralAnalyzer(
         output_dir / "analysis",
         config=config,
@@ -56,30 +55,29 @@ def run_battery_test(
     # 2. Load Audio
     print(f"Loading mix: {mix_path}")
     mix_audio, sr = load_audio_file(mix_path)
-    print(f"Loading target stem: {target_stem_path}")
+    print(f"Loading target stem (ground truth): {target_stem_path}")
     target_stem_audio, _ = load_audio_file(target_stem_path)
+    print(f"Loading separated vocal stem (artifacted): {separated_vocal_path}")
+    separated_vocal_audio, _ = load_audio_file(separated_vocal_path)
 
     # Ensure audio is stereo for the separator
     if mix_audio.ndim == 1:
         mix_audio = np.stack([mix_audio, mix_audio])
     if target_stem_audio.ndim == 1:
         target_stem_audio = np.stack([target_stem_audio, target_stem_audio])
+    if separated_vocal_audio.ndim == 1:
+        separated_vocal_audio = np.stack([separated_vocal_audio, separated_vocal_audio])
+
+    # Print the length of the audio files to debug
+    print(f"Length of target stem (samples): {len(target_stem_audio)}")
+    print(f"Length of separated vocal (samples): {len(separated_vocal_audio)}")
 
     mix_segment = AudioSegment(mix_audio, sr)
     target_stem_segment = AudioSegment(target_stem_audio, sr)
+    separated_vocal_segment = AudioSegment(separated_vocal_audio, sr)
 
-    # 3. Separate the full mix
-    print("\nSeparating full mix...")
-    # NOTE: SpleeterSeparator from the library separates the mix into 'vocal' and 'accompaniment'
-    # We assume the 'vocal' part corresponds to our target stem.
-    separation_result = separator.separate(mix_segment)
 
-    # The result from `separate` is a SeparationResult object.
-    separated_vocal_segment = separation_result.separated_vocal
-    if separated_vocal_segment is None:
-        raise ValueError("Separator did not return a vocal stem.")
-
-    # 4. Find best segments for analysis
+    # 3. Find best segments for analysis
     print("\nFinding best segments for analysis...")
     best_segments = find_best_segments(
         vocal_track=target_stem_segment, # Ground truth
@@ -128,6 +126,7 @@ def run_battery_test(
             'config': {
                 'mix_path': str(mix_path),
                 'target_stem_path': str(target_stem_path),
+                'separated_vocal_path': str(separated_vocal_path),
                 'segment_length': segment_length,
                 'segment_hop': segment_hop,
                 'top_k': top_k
@@ -141,10 +140,10 @@ def run_battery_test(
 
 if __name__ == '__main__':
     # Define file paths
-    golden_dataset_dir = Path("golden_dataset")
-    mix_path = golden_dataset_dir / "clean_mix.wav"
-    # For this test, we'll treat the sine wave as the "vocal" stem
-    target_stem_path = golden_dataset_dir / "stem_sine.wav"
+    golden_dataset_dir = Path("golden_dataset/battery")
+    mix_path = golden_dataset_dir / "mix_from_90.0s.wav"
+    target_stem_path = golden_dataset_dir / "clean_vocal_from_90.0s.wav"
+    separated_vocal_path = golden_dataset_dir / "separated_vocal_from_90.0s.wav"
     
     # Define output directory
     output_dir = Path("test_output")
@@ -153,6 +152,7 @@ if __name__ == '__main__':
     run_battery_test(
         mix_path=mix_path,
         target_stem_path=target_stem_path,
+        separated_vocal_path=separated_vocal_path,
         output_dir=output_dir
     )
     print("Battery test finished.")

@@ -14,7 +14,7 @@ from stemprover.core.types import (
 
 # Separation components
 from .separation.base import VocalSeparator
-from .separation.spleeter import SpleeterSeparator
+#from .separation.spleeter import SpleeterSeparator
 
 # Analysis components
 from .analysis.base import VocalAnalyzer
@@ -42,7 +42,7 @@ __all__ = [
     
     # Separation
     'VocalSeparator',
-    'SpleeterSeparator',
+    # 'SpleeterSeparator',
     
     # Analysis
     'VocalAnalyzer',

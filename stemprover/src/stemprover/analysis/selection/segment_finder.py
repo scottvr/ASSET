@@ -4,9 +4,10 @@ import numpy as np
 import librosa
 
 from ...types import AudioArray, SpectrogramArray
-from ...utils import create_spectrogram, calculate_onset_variation, calculate_band_energy
+from ...utils import create_spectrogram, calculate_onset_variation, calculate_band_energy, calculate_dynamic_range, calculate_phase_complexity, to_mono
 from ...core.types import ProcessingConfig
 from .metrics import SegmentMetrics
+from stemprover.analysis.selection.metrics import SegmentMetrics
 from ...core.audio import AudioSegment
 from ...core.types import (
     ProcessingConfig,
@@ -34,8 +35,8 @@ class TestSegmentFinder:
                        backing_segment: AudioSegment) -> SegmentMetrics:
         """Compute comprehensive metrics for a segment"""
 
-        vocal = vocal_segment.audio
-        backing = backing_segment.audio
+        vocal = to_mono(vocal_segment.audio)
+        backing = to_mono(backing_segment.audio)
 
         # Create spectrograms
         vocal_spec = create_spectrogram(
@@ -72,23 +73,33 @@ class TestSegmentFinder:
 
         transition_score = self._calculate_transitions(vocal)
 
-        # Compute overall score
-        score = self._compute_score(
-            vocal_clarity,
-            high_freq_content,
-            dynamic_range,
-            phase_complexity,
-            transition_score
-        )
+        sdr = SegmentMetrics.calculate_sdr(vocal, backing)
 
-        return SegmentMetrics(
+        metrics = SegmentMetrics(
+            sdr=sdr,
             vocal_clarity=vocal_clarity,
             high_freq_content=high_freq_content,
             dynamic_range=dynamic_range,
             phase_complexity=phase_complexity,
             transition_score=transition_score,
-            score=score
         )
+
+        # Use default weights to calculate a detailed score
+        weights = {
+            'clarity': 0.2, 'high_freq': 0.2, 'dynamic': 0.2,
+            'phase': 0.2, 'transition': 0.1, 'sdr': 0.1
+        }
+        metrics.detailed_score = (
+            weights['clarity'] * metrics.vocal_clarity +
+            weights['high_freq'] * metrics.high_freq_content +
+            weights['dynamic'] * metrics.dynamic_range +
+            weights['phase'] * metrics.phase_complexity +
+            weights['transition'] * metrics.transition_score +
+            weights['sdr'] * metrics.sdr
+        )
+        metrics.research_score = sdr
+
+        return metrics
 
     def _calculate_vocal_clarity(self,
                                vocal_spec: SpectrogramArray,
@@ -124,52 +135,6 @@ class TestSegmentFinder:
             self.config.sample_rate
         )
 
-    def _compute_score(self,
-                      vocal_clarity: float,
-                      high_freq_content: float,
-                      dynamic_range: float,
-                      phase_complexity: float,
-                      transition_score: float) -> float:
-        """Compute overall suitability score"""
-        # Weights for different criteria
-        weights = {
-            'baseline': {
-                'vocal_clarity': 0.4,
-                'high_freq_content': 0.3,
-                'dynamic_range': 0.1,
-                'phase_complexity': 0.1,
-                'transition_score': 0.1
-            },
-            'challenge': {
-                'vocal_clarity': 0.3,
-                'high_freq_content': 0.2,
-                'dynamic_range': 0.2,
-                'phase_complexity': 0.15,
-                'transition_score': 0.15
-            },
-            'complex': {
-                'vocal_clarity': 0.2,
-                'high_freq_content': 0.2,
-                'dynamic_range': 0.2,
-                'phase_complexity': 0.2,
-                'transition_score': 0.2
-            }
-        }
-
-        # Calculate scores for each test case type
-        scores = {}
-        for test_type, w in weights.items():
-            scores[test_type] = (
-                vocal_clarity * w['vocal_clarity'] +
-                high_freq_content * w['high_freq_content'] +
-                dynamic_range * w['dynamic_range'] +
-                phase_complexity * w['phase_complexity'] +
-                transition_score * w['transition_score']
-            )
-
-        # Return highest score
-        return max(scores.values())
-
 def find_best_segments(
     vocal_track: AudioSegment,
     backing_track: AudioSegment,
@@ -185,7 +150,7 @@ def find_best_segments(
     segment_length = int(segment_length_sec * config.sample_rate)
     hop_length = int(hop_length_sec * config.sample_rate)
 
-    for start in range(0, len(vocal_track.audio) - segment_length, hop_length):
+    for start in range(0, vocal_track.audio.shape[1] - segment_length, hop_length):
         end = start + segment_length
 
         vocal_segment = vocal_track.slice(start / config.sample_rate, end / config.sample_rate)
@@ -200,6 +165,6 @@ def find_best_segments(
             time=start / config.sample_rate
         ))
 
-    # Sort by score and return top_k
-    segments.sort(key=lambda x: x.metrics.score, reverse=True)
+    # Sort by detailed_score and return top_k
+    segments.sort(key=lambda x: x.metrics.detailed_score, reverse=True)
     return segments[:top_k]
