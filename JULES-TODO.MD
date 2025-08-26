@@ -37,11 +37,11 @@ The goal of this phase is to clean up the existing code, establish a stable data
 Phase 2: Build and Validate the Core Pipeline
 This phase focuses on making your data processing and analysis workflow functional from end to end, proving that data can flow through the system as intended.
 
-[ ] Make the Main Test Battery Runnable:
+[x] Make the Main Test Battery Runnable:
 
-[ ] Refactor battery_tests_20241209.py to use the "Golden Dataset" as input.
+[x] Refactor battery_tests_20241209.py to use the "Golden Dataset" as input.
 
-[ ] Debug the SpleeterSeparator and SpectralAnalyzer classes until the script runs from start to finish without errors, generating separation and analysis outputs.
+[x] Debug the SpleeterSeparator and SpectralAnalyzer classes until the script runs from start to finish without errors, generating separation and analysis outputs.
 
 [ ] Implement the PhaseAnalyzer:
 

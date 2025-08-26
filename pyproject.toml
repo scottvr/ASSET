@@ -14,12 +14,11 @@ authors = [
 ]
 dependencies = [
     "numpy",
-    "librosa==0.8.0",
-    "tensorflow",
+    "librosa",
     "torch",
-    "matplotlib==3.10.0",
+    "matplotlib",
     "networkx",
-    "spleeter",
+    "asteroid",
 ]
 
 [project.optional-dependencies]

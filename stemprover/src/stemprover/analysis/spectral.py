@@ -1,5 +1,7 @@
 from pathlib import Path
 import json
+import numpy as np
+import librosa
 import matplotlib.pyplot as plt
 from typing import Dict, Optional
 from datetime import datetime
@@ -11,7 +13,7 @@ from ..types import (
 from ..utils import (
     create_spectrogram, get_frequency_bins, get_band_mask,
     magnitude, angle, phase_difference, phase_coherence,
-    rms, db_scale
+    rms, db_scale, to_mono
 )
 from ..core.audio import AudioSegment
 from ..core.types import ProcessingConfig
@@ -51,8 +53,9 @@ class SpectralAnalyzer:
 
     def create_phase_spectrogram(self, audio: AudioArray, sr: int) -> SpectrogramArray:
         """Create spectrogram with phase preservation for analysis"""
+        audio_mono = to_mono(audio)
         return create_spectrogram(
-            audio,
+            audio_mono,
             n_fft=self.config.n_fft,
             hop_length=self.config.hop_length
         )
@@ -79,7 +82,7 @@ class SpectralAnalyzer:
         )
         
         # Plot difference
-        difference = db_scale(spec2) - db_scale(spec1)
+        difference = db_scale(spec1, ref=np.max) - db_scale(spec2, ref=np.max)
         self._plot_spectrogram(
             difference,
             ax3,
@@ -100,7 +103,7 @@ class SpectralAnalyzer:
                          cmap: str = 'magma') -> None:
         """Helper to plot a single spectrogram"""
         librosa.display.specshow(
-            db_scale(spec),
+            db_scale(spec, ref=np.max),
             y_axis='mel',
             x_axis='time',
             sr=sr,
