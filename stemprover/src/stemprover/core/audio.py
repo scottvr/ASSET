@@ -8,6 +8,7 @@ class AudioSegment:
     """Data class for audio segments with their metadata"""
     audio: np.ndarray
     sample_rate: int = 44100
+    name: Optional[str] = None
     start_time: float = 0.0
     duration: float = 0.0
 
@@ -55,6 +56,7 @@ class AudioSegment:
         return AudioSegment(
             audio=mono_audio,
             sample_rate=self.sample_rate,
+            name=self.name,
             start_time=self.start_time,
             duration=self.duration
         )
@@ -79,6 +81,7 @@ class AudioSegment:
         return AudioSegment(
             audio=sliced_audio,
             sample_rate=self.sample_rate,
+            name=f"{self.name}_slice_{start_sec:.2f}-{end_sec:.2f}" if self.name else None,
             start_time=self.start_time + start_sec,
             duration=end_sec - start_sec
         )

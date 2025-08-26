@@ -70,7 +70,17 @@ def run_battery_test(
         hop_length=config.hop_length
     )
 
-    separator = AsteroidSeparator(output_dir=str(output_dir / "separation"))
+    # Monkey-patch torch.load to address PyTorch 2.6 unpickling error
+    import torch
+    import functools
+    original_torch_load = torch.load
+    torch.load = functools.partial(original_torch_load, weights_only=False)
+
+    try:
+        separator = AsteroidSeparator(output_dir=str(output_dir / "separation"))
+    finally:
+        # Restore original torch.load
+        torch.load = original_torch_load
 
     # 2. Load Audio
     print(f"Loading mix: {mix_path}")
@@ -84,8 +94,8 @@ def run_battery_test(
     if target_stem_audio.ndim == 1:
         target_stem_audio = np.stack([target_stem_audio, target_stem_audio])
 
-    mix_segment = AudioSegment(mix_audio, sr)
-    target_stem_segment = AudioSegment(target_stem_audio, sr)
+    mix_segment = AudioSegment(mix_audio, sr, name=mix_path.stem)
+    target_stem_segment = AudioSegment(target_stem_audio, sr, name=target_stem_path.stem)
 
     # 3. Separate mix
     print("\nSeparating mix using AsteroidSeparator...")

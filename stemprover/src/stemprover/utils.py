@@ -91,3 +91,15 @@ def calculate_band_energy(
         total_energy = np.mean(np.abs(spec))
         return band_energy / (total_energy + 1e-8)
     return band_energy
+
+def calculate_phase_complexity(vocal_spec: SpectrogramArray,
+                               mix_spec: SpectrogramArray) -> float:
+    """
+    Measure complexity of phase relationships between a vocal and mix spectrogram.
+    """
+    vocal_phase = np.angle(vocal_spec)
+    mix_spec_phase = np.angle(mix_spec)
+
+    # Calculate phase differences and their variation
+    phase_diff = np.abs(vocal_phase - mix_spec_phase)
+    return float(np.std(phase_diff))

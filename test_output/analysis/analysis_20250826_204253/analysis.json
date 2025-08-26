@@ -1,0 +1,42 @@
+{
+  "sub_bass": {
+    "magnitude_difference": 0.0070438077673316,
+    "phase_coherence": 0.9999961853027344,
+    "energy_ratio": 243.83903407249136
+  },
+  "bass": {
+    "magnitude_difference": 0.00704336678609252,
+    "phase_coherence": 0.9999144077301025,
+    "energy_ratio": 243.80234398888481
+  },
+  "low_mid": {
+    "magnitude_difference": 0.007041191682219505,
+    "phase_coherence": 0.9995104670524597,
+    "energy_ratio": 243.62867975448813
+  },
+  "mid": {
+    "magnitude_difference": 0.007012695074081421,
+    "phase_coherence": 0.9942342638969421,
+    "energy_ratio": 241.27826017026413
+  },
+  "high_mid": {
+    "magnitude_difference": 0.006878480315208435,
+    "phase_coherence": 0.9696624279022217,
+    "energy_ratio": 230.84212584077312
+  },
+  "presence": {
+    "magnitude_difference": 0.006596867926418781,
+    "phase_coherence": 0.9194080233573914,
+    "energy_ratio": 210.11630154545864
+  },
+  "brilliance": {
+    "magnitude_difference": 0.004061819985508919,
+    "phase_coherence": 0.536101758480072,
+    "energy_ratio": 97.88978461314524
+  },
+  "overall": {
+    "total_magnitude_difference": 0.004483627621084452,
+    "average_phase_coherence": 0.6086455583572388,
+    "total_energy_ratio": 130.05964101199
+  }
+}

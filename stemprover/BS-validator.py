@@ -1,7 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Tuple
 from pathlib import Path
 import time
+import json
 
 from stemprover.core.audio import AudioSegment
 from stemprover.core.types import ProcessingConfig
@@ -62,11 +63,12 @@ def run_minimal_validation(
             audio_segment
         )
 
+        energy_dist = {k: float(v) for k, v in analysis['energy_distribution'].items()}
         results[config_name] = BandValidationResult(
-            energy_distribution=analysis['energy_distribution'],
-            phase_coherence=analysis.get('phase_coherence', 0.0),
-            band_isolation=band_isolation,
-            processing_time=analysis['processing_time']
+            energy_distribution=energy_dist,
+            phase_coherence=float(analysis.get('phase_coherence', 0.0)),
+            band_isolation=float(band_isolation),
+            processing_time=float(analysis['processing_time'])
         )
 
     return results
@@ -81,20 +83,13 @@ if __name__ == "__main__":
         "band4": (12000, 20000)
     }
 
-    # It's better to have a real file for testing, but for now, we'll just mock it.
-    # In a real scenario, you would replace this with a path to an actual audio file.
-    # For the script to run without errors, we'll create a dummy file.
-    import numpy as np
-    import soundfile as sf
-    dummy_file = Path("dummy_audio.wav")
-    if not dummy_file.exists():
-        sr = 44100
-        dummy_audio = np.random.randn(sr * 35) # 35 seconds of noise
-        sf.write(dummy_file, dummy_audio, sr)
+    # Use the clean mix from the golden dataset
+    test_file = Path("golden_dataset/battery/mix_from_90.0s.wav")
+    output_file = Path("band_split_validation_results.json")
 
     # Run validation
     validation_results = run_minimal_validation(
-        test_file=dummy_file,
+        test_file=test_file,
         band_configs={
             'original': original_bands,
             'musical': DEFAULT_FREQUENCY_BANDS
@@ -113,3 +108,10 @@ if __name__ == "__main__":
         print("\nEnergy Distribution:")
         for band, energy in metrics.energy_distribution.items():
             print(f"  {band}: {energy:.2f}%")
+
+    # Save results to a file
+    results_dict = {k: asdict(v) for k, v in validation_results.items()}
+    with open(output_file, 'w') as f:
+        json.dump(results_dict, f, indent=4)
+
+    print(f"\nResults saved to {output_file}")

@@ -138,19 +138,19 @@ class SpectralAnalyzer:
 
             # Compute metrics
             mag_diff = np.abs(sep_band - clean_band).mean()
-            phase_diff = self.phase_analyzer._phase_difference(clean_band, sep_band)
+            phase_diff = np.abs(np.angle(clean_band) - np.angle(sep_band))
 
             analysis[band_name] = {
                 "magnitude_difference": float(mag_diff),
-                "phase_coherence": self.phase_analyzer._phase_coherence(phase_diff),
+                "phase_coherence": float(np.mean(np.cos(phase_diff))),
                 "energy_ratio": rms(sep_band) / rms(clean_band) if rms(clean_band) > 0 else 0
             }
 
         # Overall metrics
-        overall_phase_diff = self.phase_analyzer._phase_difference(clean_spec, separated_spec)
+        overall_phase_diff = np.abs(np.angle(clean_spec) - np.angle(separated_spec))
         analysis["overall"] = {
             "total_magnitude_difference": float(np.abs(separated_spec - clean_spec).mean()),
-            "average_phase_coherence": self.phase_analyzer._phase_coherence(overall_phase_diff),
+            "average_phase_coherence": float(np.mean(np.cos(overall_phase_diff))),
             "total_energy_ratio": rms(separated_spec) / rms(clean_spec)
         }
 
@@ -204,8 +204,8 @@ class SpectralAnalyzer:
             sine_spec = self.create_phase_spectrogram(sine_wave, audio_segment.sample_rate)
             # Ensure specs have same shape
             min_shape = min(spec.shape[1], sine_spec.shape[1])
-            phase_diff = self.phase_analyzer._phase_difference(spec[:,:min_shape], sine_spec[:,:min_shape])
-            results["phase_coherence"] = self.phase_analyzer._phase_coherence(phase_diff)
+            phase_diff = np.abs(np.angle(spec[:,:min_shape]) - np.angle(sine_spec[:,:min_shape]))
+            results["phase_coherence"] = float(np.mean(np.cos(phase_diff)))
 
         return results
 

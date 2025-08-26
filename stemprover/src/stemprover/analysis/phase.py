@@ -6,7 +6,8 @@ import librosa
 
 from ..core.audio import AudioSegment
 from .base import VocalAnalyzer
-from ..core.types import SpectrogramArray, AudioArray
+from ..types import SpectrogramArray, AudioArray
+from ..utils import calculate_phase_complexity
 
 class PhaseAnalyzer(VocalAnalyzer):
     """
@@ -23,8 +24,8 @@ class PhaseAnalyzer(VocalAnalyzer):
         Analyzes phase differences and coherence and saves results to a file.
         """
         # 1. Generate spectrograms
-        clean_spec = self.create_phase_spectrogram(clean.audio, clean.sr)
-        separated_spec = self.create_phase_spectrogram(separated.audio, separated.sr)
+        clean_spec = self.create_phase_spectrogram(clean.audio, clean.sample_rate)
+        separated_spec = self.create_phase_spectrogram(separated.audio, separated.sample_rate)
 
         # 2. Ensure spectrograms have the same shape
         min_shape = min(clean_spec.shape[1], separated_spec.shape[1])
@@ -32,9 +33,9 @@ class PhaseAnalyzer(VocalAnalyzer):
         separated_spec = separated_spec[:, :min_shape]
 
         # 3. Calculate phase metrics
-        phase_diff = self._phase_difference(clean_spec, separated_spec)
-        phase_coherence = self._phase_coherence(phase_diff)
-        phase_complexity = self._calculate_phase_complexity(separated_spec, clean_spec) # Note: order might matter
+        phase_diff = np.abs(np.angle(clean_spec) - np.angle(separated_spec))
+        phase_coherence = float(np.mean(np.cos(phase_diff)))
+        phase_complexity = calculate_phase_complexity(separated_spec, clean_spec)
 
         # 4. Store results
         results = {
@@ -44,7 +45,8 @@ class PhaseAnalyzer(VocalAnalyzer):
         }
 
         # 5. Save results to JSON
-        output_path = self.output_dir / f"phase_analysis_{clean.path.stem}.json"
+        output_name = clean.name or "unnamed_segment"
+        output_path = self.output_dir / f"phase_analysis_{output_name}.json"
         with open(output_path, 'w') as f:
             json.dump(results, f, indent=4)
 
@@ -55,30 +57,3 @@ class PhaseAnalyzer(VocalAnalyzer):
         Create spectrogram with phase preservation for analysis.
         """
         return librosa.stft(audio, n_fft=self.n_fft, hop_length=self.hop_length)
-
-    # Private methods migrated from utils
-    def _angle(self, complex_spec: SpectrogramArray) -> SpectrogramArray:
-        """Get phase angle from complex spectrogram"""
-        return np.angle(complex_spec)
-
-    def _magnitude(self, complex_spec: SpectrogramArray) -> SpectrogramArray:
-        """Get magnitude from complex spectrogram"""
-        return np.abs(complex_spec)
-
-    def _phase_difference(self, spec1: SpectrogramArray, spec2: SpectrogramArray) -> SpectrogramArray:
-        """Compute phase difference between spectrograms"""
-        return np.abs(self._angle(spec1) - self._angle(spec2))
-
-    def _phase_coherence(self, phase_diff: SpectrogramArray) -> float:
-        """Compute phase coherence from phase difference"""
-        return float(np.mean(np.cos(phase_diff)))
-
-    def _calculate_phase_complexity(self, vocal_spec: SpectrogramArray,
-                                   mix_spec: SpectrogramArray) -> float:
-        """Measure complexity of phase relationships"""
-        vocal_phase = self._angle(vocal_spec)
-        mix_spec_phase = self._angle(mix_spec)
-
-        # Calculate phase differences and their variation
-        phase_diff = np.abs(vocal_phase - mix_spec_phase)
-        return float(np.std(phase_diff))

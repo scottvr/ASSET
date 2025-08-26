@@ -1,0 +1,27 @@
+{
+    "original": {
+        "energy_distribution": {
+            "band1": 81.49711608886719,
+            "band2": 13.041083335876465,
+            "band3": 3.854088544845581,
+            "band4": 1.5596506595611572
+        },
+        "phase_coherence": -0.0003807955153028727,
+        "band_isolation": 0.999519407749176,
+        "processing_time": 0.1062936782836914
+    },
+    "musical": {
+        "energy_distribution": {
+            "sub_bass": 0.190195232629776,
+            "bass": 12.564234733581543,
+            "low_mid": 5.915021896362305,
+            "mid": 21.883438110351562,
+            "high_mid": 40.914344787597656,
+            "presence": 9.39328384399414,
+            "brilliance": 9.061542510986328
+        },
+        "phase_coherence": -0.0003807955153028727,
+        "band_isolation": 0.9992205500602722,
+        "processing_time": 0.0919179916381836
+    }
+}

@@ -51,13 +51,13 @@ This phase focuses on making your data processing and analysis workflow function
 
 [x] Move phase-related functions like phase_coherence and phase_difference from common/math_utils.py into this new class as methods.
 
-[ ] Conduct the Band-Split Validation:
+[x] Conduct the Band-Split Validation:
 
-[ ] Flesh out and debug either BS-validator.py or minimal-B.S.py to make it a runnable script.
+[x] Flesh out and debug either BS-validator.py or minimal-B.S.py to make it a runnable script.
 
-[ ] Run the script on your "Golden Dataset" to compare the "musical" and "original" frequency band configurations.
+[x] Run the script on your "Golden Dataset" to compare the "musical" and "original" frequency band configurations.
 
-[ ] Save the quantitative results (e.g., SDR, SIR metrics) to a results file. This provides the data to justify your choice of DEFAULT_FREQUENCY_BANDS.
+[x] Save the quantitative results (e.g., SDR, SIR metrics) to a results file. This provides the data to justify your choice of DEFAULT_FREQUENCY_BANDS.
 
 Phase 3: Implement and Train the Enhancement Model
 This is the core machine learning phase. The goal is to get a baseline version of your enhancement model trained to prove the concept.

@@ -69,6 +69,11 @@
           "average_phase_coherence": 0.6086455583572388,
           "total_energy_ratio": 130.05964101199
         }
+      },
+      "phase_analysis": {
+        "phase_coherence": -0.01853925548493862,
+        "phase_complexity": 1.4713594913482666,
+        "mean_phase_difference": 2.1112985610961914
       }
     },
     {
@@ -133,6 +138,11 @@
           "average_phase_coherence": 0.5733030438423157,
           "total_energy_ratio": 160.62171383121014
         }
+      },
+      "phase_analysis": {
+        "phase_coherence": -0.04795725643634796,
+        "phase_complexity": 1.4568156003952026,
+        "mean_phase_difference": 2.1419644355773926
       }
     },
     {
@@ -197,6 +207,11 @@
           "average_phase_coherence": -0.0709928497672081,
           "total_energy_ratio": 422.68727911077224
         }
+      },
+      "phase_analysis": {
+        "phase_coherence": -0.046914149075746536,
+        "phase_complexity": 1.4574254751205444,
+        "mean_phase_difference": 2.14188814163208
       }
     },
     {
@@ -261,6 +276,11 @@
           "average_phase_coherence": 0.9408001899719238,
           "total_energy_ratio": 339.1135204986042
         }
+      },
+      "phase_analysis": {
+        "phase_coherence": -0.052706412971019745,
+        "phase_complexity": 1.4537787437438965,
+        "mean_phase_difference": 2.1473095417022705
       }
     },
     {
@@ -325,6 +345,11 @@
           "average_phase_coherence": 0.7821250557899475,
           "total_energy_ratio": 330.5071081074968
         }
+      },
+      "phase_analysis": {
+        "phase_coherence": -0.03588362783193588,
+        "phase_complexity": 1.4631134271621704,
+        "mean_phase_difference": 2.1304492950439453
       }
     }
   ]

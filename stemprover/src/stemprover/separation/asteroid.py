@@ -14,14 +14,14 @@ from ..io.audio import load_audio_file, save_audio_file
 import torch.serialization
 import numpy.core.multiarray
 
-torch.serialization.add_safe_globals([numpy.core.multiarray.scalar])
-
 class AsteroidSeparator(VocalSeparator):
     """Concrete implementation using Asteroid."""
 
     def __init__(self, output_dir: str = "output"):
         super().__init__(Path(output_dir))
-        self.model = DPRNNTasNet.from_pretrained("mpariente/DPRNNTasNet-ks2_WHAM_sepclean")
+        # Using safe_globals context manager to address PyTorch 2.6 unpickling error
+        with torch.serialization.safe_globals([numpy.core.multiarray.scalar]):
+            self.model = DPRNNTasNet.from_pretrained("mpariente/DPRNNTasNet-ks2_WHAM_sepclean")
         self.original_sr = 44100
         self.model_sr = 8000
 
@@ -53,12 +53,14 @@ class AsteroidSeparator(VocalSeparator):
         # Duplicate mono to stereo to match input format
         separated_vocal = AudioSegment(
             audio=np.vstack([vocals_resampled, vocals_resampled]),
-            sample_rate=mixed.sample_rate
+            sample_rate=mixed.sample_rate,
+            name=f"{mixed.name}_vocal" if mixed.name else "vocal"
         )
 
         separated_accompaniment = AudioSegment(
             audio=np.vstack([accompaniment_resampled, accompaniment_resampled]),
-            sample_rate=mixed.sample_rate
+            sample_rate=mixed.sample_rate,
+            name=f"{mixed.name}_accompaniment" if mixed.name else "accompaniment"
         )
 
         return separated_vocal, separated_accompaniment
