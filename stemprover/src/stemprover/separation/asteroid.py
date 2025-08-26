@@ -11,7 +11,10 @@ from .base import VocalSeparator
 from ..core.audio import AudioSegment
 from ..core.types import SeparationResult
 from ..io.audio import load_audio_file, save_audio_file
+import torch.serialization
+import numpy.core.multiarray
 
+torch.serialization.add_safe_globals([numpy.core.multiarray.scalar])
 
 class AsteroidSeparator(VocalSeparator):
     """Concrete implementation using Asteroid."""
@@ -22,7 +25,7 @@ class AsteroidSeparator(VocalSeparator):
         self.original_sr = 44100
         self.model_sr = 8000
 
-    def separate(self, mixed: AudioSegment) -> SeparationResult:
+    def separate(self, mixed: AudioSegment) -> Tuple[AudioSegment, AudioSegment]:
         """Separate vocals and accompaniment from mixed audio"""
         # Resample to model's sample rate
         audio_resampled = librosa.resample(
@@ -58,11 +61,7 @@ class AsteroidSeparator(VocalSeparator):
             sample_rate=mixed.sample_rate
         )
 
-        return SeparationResult(
-            separated_vocal=separated_vocal,
-            separated_accompaniment=separated_accompaniment,
-            mixed=mixed
-        )
+        return separated_vocal, separated_accompaniment
 
     def _save_audio_files(
         self,
