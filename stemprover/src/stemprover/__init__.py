@@ -6,8 +6,8 @@ except ImportError:
     __version__ = "unknown"
 
 # Core imports
-from stemprover.core.audio import AudioSegment
-from stemprover.core.types import (
+from .core.audio import AudioSegment
+from .core.types import (
     ProcessingConfig,
     SeparationResult
 )
@@ -24,26 +24,26 @@ from .analysis.phase import PhaseAnalyzer
 # Future diffusion components
 #from .diffusion.models import PhaseAwareLoRA
 #from .diffusion.training import PhaseAwareTrainer
-from stemprover.enhancement.controlnet import PhaseAwareControlNet
+from .enhancement.controlnet import PhaseAwareControlNet
 
 __all__ = [
     # Version
     '__version__',
-    
+
     # Core
     'AudioSegment',
     'ProcessingConfig',
     'SeparationResult',
-    
+
     # Separation
     'VocalSeparator',
     # 'SpleeterSeparator',
-    
+
     # Analysis
     'VocalAnalyzer',
     'SpectralAnalyzer',
     'PhaseAnalyzer',
-    
+
     # Diffusion
     'PhaseAwareLoRA',
     'PhaseAwareTrainer',

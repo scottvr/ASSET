@@ -1,8 +1,13 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, NewType
+import numpy as np
 import matplotlib.pyplot as plt
 from .audio import AudioSegment
+
+# Define custom types for clarity
+AudioArray = NewType('AudioArray', np.ndarray)
+SpectrogramArray = NewType('SpectrogramArray', np.ndarray)
 
 @dataclass
 class ProcessingConfig:

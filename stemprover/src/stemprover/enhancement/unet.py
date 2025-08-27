@@ -14,11 +14,19 @@ class UNetWrapper(nn.Module):
         super().__init__()
         # Load the pre-trained UNet model
         self.unet = UNet2DConditionModel.from_pretrained(model_name, subfolder=subfolder)
+<<<<<<< HEAD
         
         # Define the points for feature injection (ControlNet)
         # These are the outputs of the down blocks and the mid block
         self.num_injection_points = len(self.unet.down_blocks) * 3 + 1 # 3 resnets per downblock + midblock
         
+=======
+
+        # Define the points for feature injection (ControlNet)
+        # These are the outputs of the down blocks and the mid block
+        self.num_injection_points = len(self.unet.down_blocks) * 3 + 1 # 3 resnets per downblock + midblock
+
+>>>>>>> jules
         # Store feature channel dimensions for the zero-convolutions in the ControlNet
         self._feature_channels = [b.resnets[-1].out_channels for b in self.unet.down_blocks]
         self._feature_channels.append(self.unet.mid_block.resnets[-1].out_channels)
@@ -41,10 +49,17 @@ class UNetWrapper(nn.Module):
         and returns the intermediate feature maps.
         """
         features = []
+<<<<<<< HEAD
         
         # Initial convolution
         x = self.unet.conv_in(sample)
         
+=======
+
+        # Initial convolution
+        x = self.unet.conv_in(sample)
+
+>>>>>>> jules
         # Down-sampling blocks
         for down_block in self.unet.down_blocks:
             for resnet in down_block.resnets:
@@ -57,7 +72,11 @@ class UNetWrapper(nn.Module):
         # Mid block
         x = self.unet.mid_block(x, timestep, encoder_hidden_states)
         features.append(x)
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> jules
         return features
 
     def forward_with_features(
@@ -73,6 +92,7 @@ class UNetWrapper(nn.Module):
         """
         # The 'features' are the ControlNet-modified outputs of the down blocks
         # The UNet forward pass needs to be re-implemented to use these
+<<<<<<< HEAD
         
         # This is a conceptual placeholder. A real implementation requires
         # re-implementing the UNet's forward pass to inject these features
@@ -81,6 +101,16 @@ class UNetWrapper(nn.Module):
         # For now, we pass the final feature from the pyramid to the up-blocks
         x = features[-1]
         
+=======
+
+        # This is a conceptual placeholder. A real implementation requires
+        # re-implementing the UNet's forward pass to inject these features
+        # at the correct locations in the up-sampling path.
+
+        # For now, we pass the final feature from the pyramid to the up-blocks
+        x = features[-1]
+
+>>>>>>> jules
         # Up-sampling blocks
         for up_block in self.unet.up_blocks:
             # This is a simplification and will not work correctly without
@@ -91,7 +121,11 @@ class UNetWrapper(nn.Module):
         x = self.unet.conv_norm_out(x)
         x = self.unet.conv_act(x)
         x = self.unet.conv_out(x)
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> jules
         return x
 
     def forward(self, *args, **kwargs):
