@@ -6,13 +6,8 @@ from typing import Tuple
 from ..analysis.artifacts.preprocessor import HighFrequencyArtifactPreprocessor
 
 def audio_to_spectrogram(
-<<<<<<< HEAD
-    audio_tensor: torch.Tensor, 
-    n_fft: int = 2048, 
-=======
     audio_tensor: torch.Tensor,
     n_fft: int = 2048,
->>>>>>> jules
     hop_length: int = 512
 ) -> torch.Tensor:
     """
@@ -21,15 +16,6 @@ def audio_to_spectrogram(
     - A channel is the phase spectrogram.
     """
     audio_numpy = audio_tensor.numpy()
-<<<<<<< HEAD
-    
-    # 1. Compute STFT
-    stft_result = librosa.stft(y=audio_numpy, n_fft=n_fft, hop_length=hop_length)
-    
-    # 2. Separate magnitude and phase
-    magnitude, phase = librosa.magphase(stft_result)
-    
-=======
 
     # 1. Compute STFT
     stft_result = librosa.stft(y=audio_numpy, n_fft=n_fft, hop_length=hop_length)
@@ -37,24 +23,15 @@ def audio_to_spectrogram(
     # 2. Separate magnitude and phase
     magnitude, phase = librosa.magphase(stft_result)
 
->>>>>>> jules
     # 3. Normalize magnitude and create 3-channel image
     magnitude_db = librosa.amplitude_to_db(magnitude, ref=np.max)
     magnitude_normalized = (magnitude_db - magnitude_db.min()) / (magnitude_db.max() - magnitude_db.min())
     magnitude_rgb = np.stack([magnitude_normalized] * 3, axis=-1)
-<<<<<<< HEAD
-    
-    # 4. Convert to torch tensors
-    magnitude_tensor = torch.from_numpy(magnitude_rgb).permute(2, 0, 1) # HWC to CHW
-    phase_tensor = torch.from_numpy(phase).unsqueeze(0) # Add channel dim
-    
-=======
 
     # 4. Convert to torch tensors
     magnitude_tensor = torch.from_numpy(magnitude_rgb).permute(2, 0, 1) # HWC to CHW
     phase_tensor = torch.from_numpy(phase).unsqueeze(0) # Add channel dim
 
->>>>>>> jules
     # 5. Combine to 4-channel tensor
     return torch.cat([magnitude_tensor, phase_tensor], dim=0)
 
@@ -75,19 +52,11 @@ def generate_training_pair(
     # The preprocessor expects the input to be in the 4-channel format
     clean_spec_rgba = audio_to_spectrogram(clean_audio)
     sep_spec_rgba = audio_to_spectrogram(separated_audio)
-<<<<<<< HEAD
     
     # Generate control signal from the separated spectrogram
     # The preprocessor's forward method expects a batch, so we add a batch dimension
     condition = preprocessor(sep_spec_rgba.unsqueeze(0)).squeeze(0) # Remove batch dim after
     
-=======
-
-    # Generate control signal from the separated spectrogram
-    # The preprocessor's forward method expects a batch, so we add a batch dimension
-    condition = preprocessor(sep_spec_rgba.unsqueeze(0)).squeeze(0) # Remove batch dim after
-
->>>>>>> jules
     # The model's target should be the clean spectrogram
     # The model's input is the separated spectrogram
     return condition, sep_spec_rgba, clean_spec_rgba
