@@ -12,14 +12,10 @@ import librosa
 import numpy as np
 from diffusers import UNet2DConditionModel
 
-# --- All necessary code from the project combined into one file ---
-
-# from stemprover.io.audio
 def load_audio(path: str, sr: int = 44100, mono: bool = True) -> torch.Tensor:
     audio, _ = librosa.load(path, sr=sr, mono=mono)
     return torch.from_numpy(audio).float()
 
-# from stemprover.analysis.artifacts.preprocessor
 class HighFrequencyArtifactPreprocessor(nn.Module):
     def __init__(self, threshold_freq: float = 11000, sample_rate: int = 44100):
         super().__init__()
@@ -42,7 +38,6 @@ class HighFrequencyArtifactPreprocessor(nn.Module):
         else:
             return torch.ones_like(magnitude)
 
-# from stemprover.training.pairs
 def audio_to_spectrogram(audio_tensor: torch.Tensor, n_fft: int = 2048, hop_length: int = 512) -> torch.Tensor:
     audio_numpy = audio_tensor.numpy()
     stft_result = librosa.stft(y=audio_numpy, n_fft=n_fft, hop_length=hop_length)
@@ -95,7 +90,6 @@ class UNetWrapper(nn.Module):
         return self.unet(x, temb, context).sample
 
 
-# from stemprover.enhancement.controlnet
 class ArtifactDetector(nn.Module):
     def __init__(self):
         super().__init__()
@@ -214,7 +208,6 @@ def prepare_training(clean_dir: str, separated_dir: str, batch_size: int) -> Dat
     dataset = ArtifactDataset(clean_paths, clean_paths, preprocessor)
     return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-# Main execution block
 def main(args):
     print("Setting up training...")
     os.makedirs(args.save_dir, exist_ok=True)

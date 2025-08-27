@@ -1,42 +1,19 @@
 # [ASSET] Audio Separation Stemfile Enhancement Toolkit
 
-Featuring StemProver - the Stem Improver.
-
-
-# Important!
-current status
-
-
-While renaming the repo and doing some refactoring, I merged a documentation branch into main and pushed to github. The docs may make the project look more ready-for-primetime than it is. 
-
-there is still quite a bit of code that is local to my machine only, including the training code, which like the rest of stemprover, is still under active development. 
-
-I appreciate your interest and when this repo is usable, I will have detailed installation and usage instructions documented. Unfortunately, that time is not now. 
-
-# Coming Soon
-
-
-
- 
-<details open>
-    <summary> for the AI Developer, ML Engineer, CS Researcher, Music Technologist, Data Scientist, etc. 
-    </summary>
-
-ASSET: Audio Separation Stemfile Enhancement Toolkit
 Featuring StemProver - The Stem Improver
 Status Update
 This repository contains the ongoing development of StemProver. While the core architecture and goals are defined here, much of the training code and latest model versions are still under active development locally. This documentation reflects the current architectural direction.
 
-Overview 🎶
+Overview
 StemProver is a novel system for reducing artifacts in audio stems created by source separation tools like Spleeter or Demucs. When these tools isolate an instrument or vocal track, they often leave behind unwanted sounds, such as muffled bleed from other instruments, robotic phasing, or high-frequency distortion.
 
 StemProver cleans these stems using a state-of-the-art, two-stage deep learning pipeline. It reframes the audio artifact problem as a pair of specialized tasks: first as an image restoration problem, and second as a waveform synthesis problem. This approach allows us to leverage powerful, pre-trained models from both the image and audio domains to achieve high-fidelity results.
 
 →
-The Two-Stage Architecture ⚙️
+The Two-Stage Architecture 
 Instead of attempting to manipulate complex audio data (both magnitude and phase) in a single, monolithic model, StemProver separates the problem into two distinct stages, allowing each model to excel at its specialized task.
 
-Stage 1: Spectrogram Restoration (The "Art Restorer")
+Stage 1: Spectrogram Restoration (img2img)
 This stage focuses solely on cleaning the magnitude spectrogram, which is a visual representation of the audio's frequency content. The artifact-laden stem spectrogram is treated like a blurry or damaged photograph.
 
 Input: A magnitude spectrogram generated from a stem that contains separation artifacts.
@@ -47,7 +24,7 @@ Process: The model performs an image-to-image translation. It uses the spectrogr
 
 Output: A clean, high-fidelity magnitude spectrogram that looks as if it came from a perfectly isolated source.
 
-Stage 2: Waveform Synthesis (The "Vocal Cords")
+Stage 2: Waveform Synthesis 
 This stage takes the clean visual "blueprint" from Stage 1 and converts it back into pristine audio. It solves the critical problem of phase by generating a new, perfectly coherent phase for the restored magnitude data.
 
 Input: The restored magnitude spectrogram from Stage 1.
@@ -58,7 +35,7 @@ Process: The vocoder has been trained on thousands of hours of clean audio and i
 
 Output: A high-quality, artifact-free WAV audio file.
 
-Technical Advantages ✅
+Technical Advantages
 Separation of Concerns: This pipeline is robust because each model is a specialist. The diffusion model handles the 2D spatial problem of image restoration, while the vocoder handles the 1D temporal problem of waveform generation.
 
 Leverages Pre-trained Power: This approach effectively harnesses the billions of dollars and years of research invested in large-scale image models for the difficult task of artifact removal.
@@ -75,5 +52,3 @@ Stage 1 Training: The ControlNet-LoRA is trained on pairs of spectrogram images 
 Stage 2 Training: We can leverage a publicly available, pre-trained HiFi-GAN model. For optimal performance, this vocoder can be fine-tuned on the "clean" half of the audio dataset to specialize it for the target sound sources (vocals, drums, etc.).
 
 Tech Stack: PyTorch for modeling, the Diffusers library for the ControlNet stage, and a pre-existing HiFi-GAN implementation for the synthesis stage. Librosa handles all audio pre-processing and spectrogram generation.
-</details>
-</details>
