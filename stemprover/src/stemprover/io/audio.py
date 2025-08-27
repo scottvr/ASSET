@@ -2,8 +2,14 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 import librosa
+import torch
 from typing import Tuple
 from ..core.audio import AudioSegment
+
+def load_audio(path: Path, sr: int = 44100, mono: bool = False) -> torch.Tensor:
+    """Load audio file and return as torch tensor."""
+    audio, _ = load_audio_file(path, sr, mono)
+    return torch.from_numpy(audio).float()
 
 def load_audio_file(path: Path, sr: int = 44100, mono: bool = False) -> Tuple[np.ndarray, int]:
     """Load audio file with error handling and validation"""
