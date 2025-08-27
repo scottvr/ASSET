@@ -64,32 +64,47 @@ class UNetWrapper(nn.Module):
         x: torch.Tensor,
         features: List[torch.Tensor],
         timestep: torch.Tensor,
-        encoder_hidden_states: torch.Tensor
+        encoder_hidden_states: torch.Tensor,
     ) -> torch.Tensor:
         """
         Runs the second half of the UNet (up-sampling blocks) using the
         modified feature maps provided by the ControlNet.
         """
-        # The 'features' are the ControlNet-modified outputs of the down blocks
-        # The UNet forward pass needs to be re-implemented to use these
+        # The `features` are the ControlNet-modified outputs of the down blocks + mid block
+        # We need to feed these into the up-sampling blocks as skip connections
 
-        # This is a conceptual placeholder. A real implementation requires
-        # re-implementing the UNet's forward pass to inject these features
-        # at the correct locations in the up-sampling path.
-
-        # For now, we pass the final feature from the pyramid to the up-blocks
-        x = features[-1]
+        # Start with the output of the mid-block, which is the last feature
+        x = features.pop()
 
         # Up-sampling blocks
         for up_block in self.unet.up_blocks:
-            # This is a simplification and will not work correctly without
-            # correctly handling the skip connections from the feature pyramid.
-            x = up_block(x, res_hidden_states_tuple=features, temb=timestep, encoder_hidden_states=encoder_hidden_states)
+            # The number of skip connections needed for this up-block
+            num_res_samples = len(up_block.resnets)
+
+            # Get the skip connections from the end of the features list
+            res_samples = features[-num_res_samples:]
+            features = features[:-num_res_samples]
+
+            if hasattr(up_block, "has_cross_attention") and up_block.has_cross_attention:
+                x = up_block(
+                    hidden_states=x,
+                    temb=timestep,
+                    res_hidden_states_tuple=res_samples,
+                    encoder_hidden_states=encoder_hidden_states,
+                )
+            else:
+                x = up_block(
+                    hidden_states=x,
+                    temb=timestep,
+                    res_hidden_states_tuple=res_samples,
+                )
 
         # Post-processing
-        x = self.unet.conv_norm_out(x)
-        x = self.unet.conv_act(x)
+        if self.unet.conv_norm_out:
+            x = self.unet.conv_norm_out(x)
+            x = self.unet.conv_act(x)
         x = self.unet.conv_out(x)
+
         return x
 
     def forward(self, *args, **kwargs):
