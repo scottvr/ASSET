@@ -144,7 +144,6 @@ class PhaseAwareControlNet(nn.Module):
         # The base UNet also expects a text embedding context. We'll pass None.
         return self.base_model.unet(x_fp16, timestep, encoder_hidden_states=context).sample
 
-# from stemprover.enhancement.training (corrected and simplified, with chunking)
 class ArtifactDataset(Dataset):
     def __init__(self, clean_paths: List[str], separated_paths: List[str], preprocessor: HighFrequencyArtifactPreprocessor, segment_len_s: int = 5, sample_rate: int = 44100):
         self.clean_paths = clean_paths
